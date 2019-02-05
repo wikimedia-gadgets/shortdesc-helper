@@ -1,0 +1,67 @@
+/*  _____________________________________________________________________________
+ * |                                                                             |
+ * |                    === WARNING: GLOBAL GADGET FILE ===                      |
+ * |                  Changes to this page affect many users.                    |
+ * | Please discuss changes on the talk page or on [[WT:Gadget]] before editing. |
+ * |_____________________________________________________________________________|
+ *
+ */
+/* v3.2.3 */
+
+/* Stylings for links to wikidata and missing description */
+.sdh-wikidata-description {
+	color: MediumVioletRed; /* Using MediumVioletRed rather than previous HotPink to meet WCAG AA */
+}
+
+.sdh-missing-description {
+	color: DarkRed; /* Using DarkRed rather than previous Red to meet WCAG AA */
+}
+
+/* Brackets and seperators for clickies */
+.sdh-clicky + .sdh-clicky::before {
+	content: ' · ';
+}
+
+.sdh-clickies::before {
+	content: ' (';
+}
+
+.sdh-clickies::after {
+	content: ')';
+}
+
+/* Styling for editing bar */
+#sdh-editbox {
+	padding: 0;
+	margin: 0;
+	display: inline-block;
+}
+
+/* Styling for processing animation */
+@keyframes wave {
+	0% { transform: translateY( 0 ); }
+	20% { transform: translateY( -0.25em ); }
+	40% { transform: translateY( 0 ); }
+	100% { transform: translateY( 0 ); }
+}
+
+.sdh-processing {
+	display: inline-block;
+}
+
+.sdh-processing-dot {
+	display: inline-block;
+	animation: wave 1s ease-out infinite;
+}
+
+.sdh-processing-dot-1 {
+	animation-delay: 200ms;
+}
+
+.sdh-processing-dot-2 {
+	animation-delay: 400ms;
+}
+
+.sdh-processing-dot-3 {
+	animation-delay: 600ms;
+}
