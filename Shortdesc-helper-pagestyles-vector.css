@@ -1,0 +1,12 @@
+/* Fix content jump */
+.skin-vector.ns-0 #contentSub::after {
+	content: '\200B';
+}
+
+.skin-vector.ns-0 .noarticletext {
+	margin-top: -1.008em; /* 0.84 * 1.2em */
+}
+
+.skin-vector.ns-0 #sdh {
+	margin-bottom: -1.2em;
+}
