@@ -20,7 +20,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
 */
-/* WARNING: NO JQUERY */
 'use strict';
 
 libSettings = {}
@@ -59,15 +58,13 @@ libSettings.warn = function ( message ) {
  * @function
  * @name error
  * @param {string} message
- * @param {'type'} errorType
+ * @param {string} errorType
 */
 libSettings.error = function ( message, errorType ) {
-	switch ( errorType ) {
-		case 'type':
-			throw new TypeError ( libSettings.buildMessage (message ) );
-		default:
-			throw new Error ( libSettings.buildMessage (message ) );
+	if ( !errorType ) {
+		var errorType = 'Error'
 	}
+	throw new window[errorType] ( libSettings.buildMessage (message ) );
 }
 
 /** Used so that functions can take a parameter regarding whether
@@ -98,7 +95,7 @@ libSettings.throw = function ( message, errorLevel, errorType ) {
  * @property {...string} config.basetype Javascript type to validate against (Defined by extending classes).
 */
 
-Option = class {
+libSettings.Option = class {
 	constructor ( config, basetype ) {
 		this.name = config.name
 		this.defaultValue = config.defaultValue
@@ -129,7 +126,7 @@ libSettings.Option.prototype.validate = function ( value, errorLevel ) {
 
 	if ( this.basetype && !this.basetype.some ( checkType ) ) {
 		var message = `Value of ${this.name}  does not have one of the type(s) ${this.basetype}.`;
-		libSettings.throw ( message, errorLevel, 'type' );
+		libSettings.throw ( message, errorLevel, 'TypeError' );
 		return false
 	}
 
