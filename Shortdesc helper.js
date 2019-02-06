@@ -19,31 +19,46 @@ var optionsConfig = [
 	preferences: [
 		new NumberOption( {
 			name: "InputWidth",
-			value: 35,
-			label: "Width of editing input"
+			label: "Width of editing input",
+			defaultValue: 35
 		} ),
 		new BoleanOption( {
 			name: "AddToRedirect"
-			value: true,
 			label: "Allow additions to redirects",
 			helptip: "When checked, redirects will have ",
+			defaultValue: true
 		} ),
 		new StringOption( {
 			name: "SaveWikidata"
 			label: "Save changes to Wikidata",
+			defaultValue: 'add',
 			values: {
-				"add": "Only on additions (default)",
-				"all": "On all changes",
-				"never": "Never"
+				[ 'add', 'Only on additions (default)' ],
+				[ 'all', 'On all changes' ],
+				[ 'never', 'Never' ]
 			}
 		} )
 	]
 },
 
 {
-	title: "Semi-automated options"
-	showIf: "awb"
+	title: "Semi-automated options",
+	show: HasAWBAccess
+},
+
+{
+	title: "Advanced",
+	preferences: [
+		new BoleanOption( {
+			name: "ClashFix"
+			label: "Disable css used to prevent content jump."
+			helptip: "You'd want to this if you have another script that clashes with this one\
+			, such as User:Yair_rand/WikidataInfo.js."
+			value: false
+		} )
+	]
 }
+
 ]
 
 
@@ -354,7 +369,7 @@ var textInput = function () {
 			$( '#sdh' ).append( actionField.$element );
 
 			//Size the inputbox
-			$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' );
+			$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' ); //TODO fix on timeless to be less wide
 		} );
 	}
 };
@@ -374,7 +389,9 @@ var appendDescription  = function () {
 	$( '#contentSub' ).append(
 		$ ( '<div>' )
 			.prop ( 'id',  'sdh' )
+			.css ( 'margin-top', options.ClashFix ? '1.2em': '0' ) //TODO: this will apply to all skins, only apply vector - use mw.util.addCSS?
 	);
+
 	if ( $description ) {
 		$( '#sdh' ).append( $description );
 	}
@@ -499,7 +516,7 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 							$( '#sdh-showdescrip ' ).append(
 								$( '<div>')
 									.addClass ( 'sdh-processing' )
-									.css ( 'margin-left', '0.5em' )
+									.css ( 'margin-left', '0.5em' ) //TODO move to CSS file
 							);
 
 							for ( var x = 0; x < 3; x++ ) {
