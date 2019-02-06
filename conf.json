@@ -1,0 +1,8 @@
+{
+  "plugins": [
+    "node_modules/jsdoc-class-hierarchy"
+  ],
+  "opts": {
+    "class-hierarchy": { "showList": true }
+  }
+}
