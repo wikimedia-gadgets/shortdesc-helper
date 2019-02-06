@@ -62,7 +62,7 @@ libSettings.warn = function ( message ) {
 */
 libSettings.error = function ( message, errorType ) {
 	if ( !errorType ) {
-		var errorType = 'Error'
+		let errorType = 'Error';
 	}
 	throw new window[errorType] ( libSettings.buildMessage (message ) );
 }
@@ -90,7 +90,7 @@ libSettings.throw = function ( message, errorLevel, errorType ) {
  * @property {*} config.defaultValue (required)
  * @property {string} config.text Text displayed in settings. (required)
  * @property {string} config.helptip Help text shown in settings.
- * @property {Array|Object} config.possibleValues Either [<value>,..] or { [<InternalValue>, <ValueDisplayedInSettings>], ..}.
+ * @property {Array} config.possibleValues Either [ <value>, .. ] or  [ [ <InternalValue>, <ValueDisplayedInSettings>], ..].
  *  Value is validated against possibleValues.
  * @property {...string} config.basetype Javascript type to validate against (Defined by extending classes).
 */
@@ -116,7 +116,7 @@ libSettings.Option = class {
 
 libSettings.Option.prototype.validate = function ( value, errorLevel ) {
 	//Check type
-	var checkType = function ( type, errorLevel ) {
+	let checkType = function ( type, errorLevel ) {
 		if ( typeof value === type ) {
 			return true;
 		} else {
@@ -125,14 +125,14 @@ libSettings.Option.prototype.validate = function ( value, errorLevel ) {
 	}
 
 	if ( this.basetype && !this.basetype.some ( checkType ) ) {
-		var message = `Value of ${this.name}  does not have one of the type(s) ${this.basetype}.`;
+		let message = `Value of ${this.name}  does not have one of the type(s) [${this.basetype}].`;
 		libSettings.throw ( message, errorLevel, 'TypeError' );
 		return false
 	}
 
 	//Check if in possibleValues
 	if ( this.possibleKeys.indexOf ( value ) === -1 ) {
-		var message = `Value of option ${this.name}, ${value}, is not in  ${this.possibleKeys}.`;
+		let message = `Value of option ${this.name}, ${value}, is not in [${this.possibleKeys}].`;
 		libSettings.throw ( message, errorLevel );
 		return false
 	}
@@ -144,8 +144,7 @@ libSettings.Option.prototype.setValue = function ( value ) {
 	if ( this.validate ( value ) ) {
 		this.value = value
 	} else {
-		libSettings.warn ( `Validation of the value of ${this.name},\
-			failed, so the default setting of ${this.defaultValue} has been used.` )
+		libSettings.warn ( `Validation of the value of ${this.name}, failed, so the default setting of ${this.defaultValue} has been used.` )
 		this.value = this.defaultValue
 	}
 };

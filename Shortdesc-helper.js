@@ -15,7 +15,7 @@
 
 var optionsConfig = [
 {
-	title: "Main"
+	title: "Main",
 	preferences: [
 		new NumberOption( {
 			name: "InputWidth",
@@ -23,20 +23,20 @@ var optionsConfig = [
 			defaultValue: 35
 		} ),
 		new BoleanOption( {
-			name: "AddToRedirect"
+			name: "AddToRedirect",
 			label: "Allow additions to redirects",
 			helptip: "When checked, redirects will have ",
 			defaultValue: true
 		} ),
 		new StringOption( {
-			name: "SaveWikidata"
+			name: "SaveWikidata",
 			label: "Save changes to Wikidata",
 			defaultValue: 'add',
-			values: {
+			values: [
 				[ 'add', 'Only on additions (default)' ],
 				[ 'all', 'On all changes' ],
 				[ 'never', 'Never' ]
-			}
+			]
 		} )
 	]
 },
@@ -50,10 +50,10 @@ var optionsConfig = [
 	title: "Advanced",
 	preferences: [
 		new BoleanOption( {
-			name: "ClashFix"
-			label: "Disable css used to prevent content jump."
+			name: "ClashFix",
+			label: "Disable css used to prevent content jump.",
 			helptip: "You'd want to this if you have another script that clashes with this one\
-			, such as User:Yair_rand/WikidataInfo.js."
+			, such as User:Yair_rand/WikidataInfo.js.",
 			value: false
 		} )
 	]
