@@ -27,8 +27,6 @@ let libSettings = {};
 /* Internal console/error message functions. */
 
 /**
- * @func
- * @name buildMessage
  * @param {string} message
  * @return {string} Message with '[libSettings]' prefix.
 */
@@ -37,8 +35,6 @@ libSettings.buildMessage = function ( message ) {
 };
 
 /**
- * @func
- * @name log
  * @param {string} message
 */
 libSettings.log = function ( message ) {
@@ -46,8 +42,6 @@ libSettings.log = function ( message ) {
 };
 
 /**
- * @func
- * @name warn
  * @param {string} message
 */
 libSettings.warn = function ( message ) {
@@ -55,8 +49,6 @@ libSettings.warn = function ( message ) {
 };
 
 /**
- * @func
- * @name error
  * @param {string} message
  * @param {string} [errorType = 'Error']
 */
@@ -67,8 +59,6 @@ libSettings.error = function ( message, errorType = 'Error' ) {
 
 /** Used so that functions can take a parameter regarding whether
  * an error should be raised, or a warning logged.
- * @func
- * @name throw
  * @param {string} message
  * @param {('warn'|'error')} errorLevel
  * @param {string} errorType
@@ -93,11 +83,13 @@ libSettings.throw = function ( message, errorLevel, errorType ) {
  * @property {Array} config.possibleValues Either [ <value>, .. ] or
  *  [ [ <InternalValue>, <ValueDisplayedInSettings> ], .. ].
  *  Value is validated against possibleValues.
- * @property {...string} config.basetype Type to validate against (Defined by extending classes).
+ * @param {string} type Type of option. Should be same as name of extending class minus
+ *  Option at the end (e.g "Color" for "ColorOption" class)
+ * @param {...string} basetypes Type(s) to validate against (Defined by extending classes).
 */
 
 libSettings.Option = class {
-	constructor( config, basetype ) {
+	constructor( config, type, basetypes ) {
 		this.name = config.name;
 		this.defaultValue = config.defaultValue;
 		this.possibeValues = config.possibleValues;
@@ -111,31 +103,35 @@ libSettings.Option = class {
 				this.possibleSettingsVal = this.possibleValues.values();
 		}
 		this.text = config.text;
-		this.basetype = basetype;
+		this.type = type;
+		this.basetypes = basetypes;
+		this.value = this.defaultValue;
 		this.validate( this.defaultValue, 'error' );
 	}
 
 	validate( value, errorLevel ) {
 		// Check type
 		if (
-			this.basetype &&
-			!this.basetype.some( ( type ) => typeof value === type )
+			this.basetypes &&
+			!this.basetypes.some( ( basetype ) => typeof value === basetype )
 		) {
-			let message = `Value of ${this.name}  does not have one of the type(s) [${this.basetype}].`;
-			libSettings.throw( message, errorLevel, 'TypeError' );
+			libSettings.throw( `Value of ${this.name}  does not have one of the type(s) [${this.basetype}].`, errorLevel, 'TypeError' );
 			return false;
 		}
 
 		// Check if in possibleValues
 		if ( this.possibleKeys.indexOf( value ) === -1 ) {
-			let message = `Value of option ${this.name}, ${value}, is not in [${this.possibleKeys}].`;
-			libSettings.throw( message, errorLevel );
+			libSettings.throw( `Value of option ${this.name}, ${value}, is not in [${this.possibleKeys}].`, errorLevel );
 			return false;
 		}
 
 		return true;
 	}
 
+	/**
+	 * Set option value.
+	 * @param {*} value
+	 */
 	setValue( value ) {
 		if ( this.validate( value ) ) {
 			this.value = value;
@@ -144,25 +140,52 @@ libSettings.Option = class {
 			this.value = this.defaultValue;
 		}
 	}
+
+	/**
+	 * Get option value.
+	 * @return {*}
+	 */
+	getValue() {
+		return this.value;
+	}
+
+	/**
+	 * Build UI.
+	 * @return {OO.ui.element}
+	 */
+	buildUI() {
+		return libSettings.error( `buildUI not defined by extending class ${this.type}Option.` );
+	}
 };
 
 /**
- * @class
- * @name BooleanOption
- * @extends Option */
+ * @extends Option
+ */
+libSettings.BooleanOption = class extends Option { /* eslint-disable-line no-unused-vars */
+	constructor( config ) {
+		super( config, 'Boolean', 'boolean' );
+	}
 
-class BooleanOption extends Option {
-	super() {}
-}
-
-/* Use internalization Date () thingy */
-class DateOption extends Option {
-
-}
+	buildUI() {
+		let checkbox = new OO.ui.CheckboxInputWidget( {
+			name: this.name,
+			selected: this.getValue()
+		} );
+		checkbox.on( 'change', this.setValue( !this.getValue() ) );
+		return checkbox;
+	}
+};
 
 /**
- * @class
- * @name Settings
+ * @extends libSettings.Option
+ */
+libSettings.DateOption = class extends libSettings.Option { /* eslint-disable-line no-unused-vars */
+	constructor( config ) {
+		super( config, 'Date', 'Date' );
+	}
+};
+
+/**
  * @param {Array.<Object>} optionsConfig
  * @property {string} optionsConfig[].title Header of particular set of preferences
  * @property {(boolean|Function)} optionsConfig[].show Boolean or anonymous function that returns a
@@ -170,26 +193,42 @@ class DateOption extends Option {
  * @property {(boolean|Function)} optionsConfig[].collapsed Whether the settings should be collapsed
  *  (e.g, if it is rarely used "Advanced" settings).
  * @property {...Option} optionsConfig[].preferences Array of Option objects.
- * @example Foo. foo
+ * @param {Object} settingsConfig
+ * @property {string} settingsConfig.filename User:Example/settings/file.js
+ * @property {string} settingsConfig.customPath User:Example/customPath
+ * @property {("small"|"medium|"large"|"panel")} settingsConfig.formFactor
+ *
 */
 
 libSettings.Settings = class {
-	constructor( optionsConfig ) {
-
+	constructor(
+		optionsConfig,
+		settingsConfig
+	) {
+		/* FIXME: Check for duplicate names of options in optionsConfig - must be completely unique
+		optionsConfig.foreach( ( element.preferences ) => {
+			element.preferences.some ( ( optionElement ) => {
+				optionElement.
+			}
+		} ); */
+		let foo;
+		foo.bar = optionsConfig.foo;
+		foo.dar = settingsConfig.foo;
 	}
+
+	load() {
+		// userSettings =
+		// self.options =
+		// self.loadPromise = foo
+	}
+
 	// Load settings
-};
 
-libSettings.Settings.prototype.load = function () {
-	// userSettings =
-	// self.options =
-	// self.loadPromise = foo
-};
-
-libSettings.Settings.prototype.get = function () {
-	// check if already loading settings
-	if ( !self.loadPromise ) {
-		self.load();
+	get() {
+		// check if already loading settings
+		if ( !this.loadPromise ) {
+			this.load();
+		}
+		// self.loadPromise.then (
 	}
-	// self.loadPromise.then (
 };
