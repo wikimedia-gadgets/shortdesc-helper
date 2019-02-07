@@ -204,17 +204,20 @@ libSettings.DateOption = class extends libSettings.Option { /* eslint-disable-li
 /**
  * @param {Array.<Object>} optionsConfig
  * @property {string} optionsConfig[].title Header of particular set of preferences
- * @property {(boolean|Function)} optionsConfig[].show Boolean or anonymous function that returns a
+ * @property {(boolean|Function)} [optionsConfig[].show] Boolean or function that returns a
  * Boolean. Can use anonymous function when a variable is only loaded after the settings is loaded.
- * @property {(boolean|Function)} optionsConfig[].collapsed Whether the settings should be collapsed
- *  (e.g, if it is rarely used "Advanced" settings).
- * @property {...Option} optionsConfig[].preferences Array of Option objects.
+ * @property {(boolean|Function)} [optionsConfig[].collapsed] Whether the settings should be
+ *  collapsed (e.g, if it is rarely used "Advanced" settings).
+ * @property {...libSettings.Option} optionsConfig[].preferences Array of Option objects.
  * @param {Object} settingsConfig
  * @property {string} settingsConfig.scriptName
- * @property {string} [settingsConfig.filename = scriptName] User:Example/settings/<filename>.js
- * @property {string} settingsConfig.customPath User:Example/<customPath>
- * @property {string} settingsConfig.customFailMessage
+ * @property {string} [settingsConfig.filename = scriptName] User:Example/settings/[filename].js
  * @property {string} settingsConfig.formFactor "small" | "medium" | "large" | "fullpage"
+ * @property {string} [settingsConfig.customPath] User:Example/[customPath] In theory we should be
+ *  trying to centralize settings into one "subfolder" of one's userspace (so that it is easier
+ *  to find them and so one's userspace is less cluttered), so just using
+ *  settingsConfig.filename is preferred.
+ * @property {string} [settingsConfig.customFailMessage]
  *
 */
 
@@ -249,19 +252,17 @@ libSettings.Settings = class {
 		this.failMessage = settingsConfig.customFailMessage || `Could not load settings for ${this.scriptName}.`;
 	}
 
-	load() {
+	/* Function to get all the [@link libSettings.option] objects inside optionsConfig */
+	traverse() {
+
+	}
+
+	startLoad() {
 		// JQUERY!!!
-		$.ajax( {
+		this.loadPromise = $.ajax( {
 			url: this.url,
 			dataType: 'text'
-		} ).then(
-			( optionsText ) => {
-
-			},
-			() => {
-				mw.notify( this.failMessage );
-			}
-		);
+		} );
 		// userSettings =
 		// this.options =
 		// this.loadPromise = foo
@@ -273,8 +274,13 @@ libSettings.Settings = class {
 		if ( !this.loadPromise ) {
 			this.loadPromise = this.load();
 		}
-		this.loadPromise.then( function ( result ) {
-			this.reuslt = result;
-		} );
+		this.loadPromise.then(
+			( optionsText ) => {
+				this.optionsText = optionsText;
+			},
+			() => {
+				mw.notify( this.failMessage );
+			}
+		);
 	}
 };
