@@ -27,6 +27,7 @@ let libSettings = {};
 /* Internal console/error message functions. */
 
 /**
+ * @func
  * @param {string} message
  * @return {string} Message with '[libSettings]' prefix.
 */
@@ -35,6 +36,7 @@ libSettings.buildMessage = function ( message ) {
 };
 
 /**
+ * @func
  * @param {string} message
 */
 libSettings.log = function ( message ) {
@@ -42,6 +44,7 @@ libSettings.log = function ( message ) {
 };
 
 /**
+ * @func
  * @param {string} message
 */
 libSettings.warn = function ( message ) {
@@ -49,6 +52,17 @@ libSettings.warn = function ( message ) {
 };
 
 /**
+ * @func
+ * @param {boolean} condition
+ * @param {string} message
+*/
+
+libSettings.assert = function ( condition, message ) {
+	console.assert( condition, libSettings.buildMessage( message ) );
+};
+
+/**
+ * @func
  * @param {string} message
  * @param {string} [errorType = 'Error']
 */
@@ -59,6 +73,7 @@ libSettings.error = function ( message, errorType = 'Error' ) {
 
 /** Used so that functions can take a parameter regarding whether
  * an error should be raised, or a warning logged.
+ * @func
  * @param {string} message
  * @param {('warn'|'error')} errorLevel
  * @param {string} errorType
@@ -159,7 +174,7 @@ libSettings.Option = class {
 };
 
 /**
- * @extends Option
+ * @extends libSettings.Option
  */
 libSettings.BooleanOption = class extends Option { /* eslint-disable-line no-unused-vars */
 	constructor( config ) {
@@ -177,6 +192,7 @@ libSettings.BooleanOption = class extends Option { /* eslint-disable-line no-unu
 };
 
 /**
+ * Use mw.widgets.DateInputWidget
  * @extends libSettings.Option
  */
 libSettings.DateOption = class extends libSettings.Option { /* eslint-disable-line no-unused-vars */
@@ -194,9 +210,11 @@ libSettings.DateOption = class extends libSettings.Option { /* eslint-disable-li
  *  (e.g, if it is rarely used "Advanced" settings).
  * @property {...Option} optionsConfig[].preferences Array of Option objects.
  * @param {Object} settingsConfig
- * @property {string} settingsConfig.filename User:Example/settings/file.js
- * @property {string} settingsConfig.customPath User:Example/customPath
- * @property {("small"|"medium|"large"|"panel")} settingsConfig.formFactor
+ * @property {string} settingsConfig.scriptName
+ * @property {string} [settingsConfig.filename = scriptName] User:Example/settings/<filename>.js
+ * @property {string} settingsConfig.customPath User:Example/<customPath>
+ * @property {string} settingsConfig.customFailMessage
+ * @property {string} settingsConfig.formFactor "small" | "medium" | "large" | "fullpage"
  *
 */
 
@@ -205,30 +223,58 @@ libSettings.Settings = class {
 		optionsConfig,
 		settingsConfig
 	) {
-		/* FIXME: Check for duplicate names of options in optionsConfig - must be completely unique
-		optionsConfig.foreach( ( element.preferences ) => {
+		this.username = mw.config.get( 'wgUserName' );
+
+		// optionsConfig
+		this.optionsConfig = optionsConfig;
+		/* MAYBE FIXME: Check for duplicate names of options in optionsConfig
+		 * - must be completely unique
+		this.optionsConfig.foreach( ( element.preferences ) => {
 			element.preferences.some ( ( optionElement ) => {
 				optionElement.
 			}
 		} ); */
-		let foo;
-		foo.bar = optionsConfig.foo;
-		foo.dar = settingsConfig.foo;
+
+		// settingsConfig
+		libSettings.assert(
+			!( settingsConfig.filename && settingsConfig.customPath ),
+			'Cannot set both filename and customPath in initializing libSettings.Settings.'
+		);
+		this.scriptName = settingsConfig.scriptName;
+		this.filename = settingsConfig.filename || settingsConfig.scriptName;
+		this.path = settingsConfig.customPath || `settings/${this.filename}`;
+		this.fullpath = encodeURIComponent( `User:${this.username}/${this.path}` );
+		this.url = `/index.php?title=${this.fullpath}&action=raw&ctype=text/javascript`;
+
+		this.failMessage = settingsConfig.customFailMessage || `Could not load settings for ${this.scriptName}.`;
 	}
 
 	load() {
+		// JQUERY!!!
+		$.ajax( {
+			url: this.url,
+			dataType: 'text'
+		} ).then(
+			( optionsText ) => {
+
+			},
+			() => {
+				mw.notify( this.failMessage );
+			}
+		);
 		// userSettings =
-		// self.options =
-		// self.loadPromise = foo
+		// this.options =
+		// this.loadPromise = foo
 	}
 
-	// Load settings
-
+	// Get settings
 	get() {
 		// check if already loading settings
 		if ( !this.loadPromise ) {
-			this.load();
+			this.loadPromise = this.load();
 		}
-		// self.loadPromise.then (
+		this.loadPromise.then( function ( result ) {
+			this.reuslt = result;
+		} );
 	}
 };
