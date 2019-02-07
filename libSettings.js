@@ -22,66 +22,66 @@
 */
 'use strict';
 
-libSettings = {}
+let libSettings = {};
 
 /* Internal console/error message functions. */
 
 /**
- * @function
+ * @func
  * @name buildMessage
  * @param {string} message
- * @returns {string} Message with '[libSettings]' prefix.
+ * @return {string} Message with '[libSettings]' prefix.
 */
-libSettings.buildMessage = function ( messsage ) {
-	return ( '[libSettings] ' + message )
-}
+libSettings.buildMessage = function ( message ) {
+	return ( '[libSettings] ' + message );
+};
 
 /**
- * @function
+ * @func
  * @name log
  * @param {string} message
 */
 libSettings.log = function ( message ) {
-	console.log ( libSettings.buildMessage ( message ) )
-}
+	console.log( libSettings.buildMessage( message ) );
+};
 
 /**
- * @function
+ * @func
  * @name warn
  * @param {string} message
 */
 libSettings.warn = function ( message ) {
-	console.warn ( libSettings.buildMessage ( message ) )
-}
+	console.warn( libSettings.buildMessage( message ) );
+};
 
 /**
- * @function
+ * @func
  * @name error
  * @param {string} message
- * @param {string} errorType
+ * @param {string} [errorType = 'Error']
 */
-libSettings.error = function ( message, errorType ) {
-	if ( !errorType ) {
-		let errorType = 'Error';
-	}
-	throw new window[errorType] ( libSettings.buildMessage (message ) );
-}
+libSettings.error = function ( message, errorType = 'Error' ) {
+	// FIXME Use console.error?
+	throw new window[ errorType ]( libSettings.buildMessage( message ) );
+};
 
 /** Used so that functions can take a parameter regarding whether
  * an error should be raised, or a warning logged.
- * @function
+ * @func
  * @name throw
  * @param {string} message
  * @param {('warn'|'error')} errorLevel
+ * @param {string} errorType
 */
 libSettings.throw = function ( message, errorLevel, errorType ) {
 	switch ( errorLevel ) {
 		case 'warn':
-			libSettings.warn ( message );
+			libSettings.warn( message );
+			break;
 		case 'error':
-			libSettings.error ( message, errorType );
+			libSettings.error( message, errorType );
 	}
-}
+};
 
 /** Represents an option.
  * @abstract
@@ -90,65 +90,61 @@ libSettings.throw = function ( message, errorLevel, errorType ) {
  * @property {*} config.defaultValue (required)
  * @property {string} config.text Text displayed in settings. (required)
  * @property {string} config.helptip Help text shown in settings.
- * @property {Array} config.possibleValues Either [ <value>, .. ] or  [ [ <InternalValue>, <ValueDisplayedInSettings>], ..].
+ * @property {Array} config.possibleValues Either [ <value>, .. ] or
+ *  [ [ <InternalValue>, <ValueDisplayedInSettings> ], .. ].
  *  Value is validated against possibleValues.
- * @property {...string} config.basetype Javascript type to validate against (Defined by extending classes).
+ * @property {...string} config.basetype Type to validate against (Defined by extending classes).
 */
 
 libSettings.Option = class {
-	constructor ( config, basetype ) {
-		this.name = config.name
-		this.defaultValue = config.defaultValue
-		this.possibeValues = config.possibleValues
+	constructor( config, basetype ) {
+		this.name = config.name;
+		this.defaultValue = config.defaultValue;
+		this.possibeValues = config.possibleValues;
 		switch ( typeof this.possibleValues ) {
-			case "Array":
+			case 'Array':
 				this.possibleKeys = this.possibleValues;
 				this.possibleSettingsVal = this.possibleValues;
+				break;
 			case 'Object':
 				this.possibleKeys = this.possibleValues.keys();
 				this.possibleSettingsVal = this.possibleValues.values();
 		}
-		this.text = config.text
-		this.basetype = basetype
-		this.validate ( this.defaultValue, 'error' );
+		this.text = config.text;
+		this.basetype = basetype;
+		this.validate( this.defaultValue, 'error' );
 	}
-}
 
-libSettings.Option.prototype.validate = function ( value, errorLevel ) {
-	//Check type
-	let checkType = function ( type, errorLevel ) {
-		if ( typeof value === type ) {
-			return true;
-		} else {
+	validate( value, errorLevel ) {
+		// Check type
+		if (
+			this.basetype &&
+			!this.basetype.some( ( type ) => typeof value === type )
+		) {
+			let message = `Value of ${this.name}  does not have one of the type(s) [${this.basetype}].`;
+			libSettings.throw( message, errorLevel, 'TypeError' );
 			return false;
 		}
+
+		// Check if in possibleValues
+		if ( this.possibleKeys.indexOf( value ) === -1 ) {
+			let message = `Value of option ${this.name}, ${value}, is not in [${this.possibleKeys}].`;
+			libSettings.throw( message, errorLevel );
+			return false;
+		}
+
+		return true;
 	}
 
-	if ( this.basetype && !this.basetype.some ( checkType ) ) {
-		let message = `Value of ${this.name}  does not have one of the type(s) [${this.basetype}].`;
-		libSettings.throw ( message, errorLevel, 'TypeError' );
-		return false
-	}
-
-	//Check if in possibleValues
-	if ( this.possibleKeys.indexOf ( value ) === -1 ) {
-		let message = `Value of option ${this.name}, ${value}, is not in [${this.possibleKeys}].`;
-		libSettings.throw ( message, errorLevel );
-		return false
-	}
-
-	return true
-}
-
-libSettings.Option.prototype.setValue = function ( value ) {
-	if ( this.validate ( value ) ) {
-		this.value = value
-	} else {
-		libSettings.warn ( `Validation of the value of ${this.name}, failed, so the default setting of ${this.defaultValue} has been used.` )
-		this.value = this.defaultValue
+	setValue( value ) {
+		if ( this.validate( value ) ) {
+			this.value = value;
+		} else {
+			libSettings.warn( `Validation of the value of ${this.name}, failed, so the default setting of ${this.defaultValue} has been used.` );
+			this.value = this.defaultValue;
+		}
 	}
 };
-
 
 /**
  * @class
@@ -156,17 +152,21 @@ libSettings.Option.prototype.setValue = function ( value ) {
  * @extends Option */
 
 class BooleanOption extends Option {
-
+	super() {}
 }
 
+/* Use internalization Date () thingy */
+class DateOption extends Option {
+
+}
 
 /**
  * @class
  * @name Settings
  * @param {Array.<Object>} optionsConfig
  * @property {string} optionsConfig[].title Header of particular set of preferences
- * @property {(boolean|Function)} optionsConfig[].show Boolean or anonymous function that returns a Boolean.
- *  Can use anonymous function when a variable is only loaded after the settings is loaded.
+ * @property {(boolean|Function)} optionsConfig[].show Boolean or anonymous function that returns a
+ * Boolean. Can use anonymous function when a variable is only loaded after the settings is loaded.
  * @property {(boolean|Function)} optionsConfig[].collapsed Whether the settings should be collapsed
  *  (e.g, if it is rarely used "Advanced" settings).
  * @property {...Option} optionsConfig[].preferences Array of Option objects.
@@ -174,22 +174,22 @@ class BooleanOption extends Option {
 */
 
 libSettings.Settings = class {
-	constructor ( optionsConfig ) {
+	constructor( optionsConfig ) {
 
 	}
-//Load settings
-}
+	// Load settings
+};
 
 libSettings.Settings.prototype.load = function () {
-	userSettings =
-	self.options =
-	self.loadPromise = foo
-}
+	// userSettings =
+	// self.options =
+	// self.loadPromise = foo
+};
 
 libSettings.Settings.prototype.get = function () {
-	//check if already loading settings
+	// check if already loading settings
 	if ( !self.loadPromise ) {
-		self.load()
+		self.load();
 	}
-	//self.loadPromise.then (
-}
+	// self.loadPromise.then (
+};

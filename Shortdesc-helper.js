@@ -369,7 +369,7 @@ var textInput = function () {
 			$( '#sdh' ).append( actionField.$element );
 
 			//Size the inputbox
-			$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' ); //TODO fix on timeless to be less wide
+			$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' ); //FIXME fix on timeless to be less wide
 		} );
 	}
 };
@@ -389,7 +389,7 @@ var appendDescription  = function () {
 	$( '#contentSub' ).append(
 		$ ( '<div>' )
 			.prop ( 'id',  'sdh' )
-			.css ( 'margin-top', options.ClashFix ? '1.2em': '0' ) //TODO: this will apply to all skins, only apply vector - use mw.util.addCSS?
+			.css ( 'margin-top', options.ClashFix ? '1.2em': '0' ) //FIXME: this will apply to all skins, only apply vector - use mw.util.addCSS?
 	);
 
 	if ( $description ) {
@@ -516,7 +516,7 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 							$( '#sdh-showdescrip ' ).append(
 								$( '<div>')
 									.addClass ( 'sdh-processing' )
-									.css ( 'margin-left', '0.5em' ) //TODO move to CSS file
+									.css ( 'margin-left', '0.5em' ) //FIXME move to CSS file
 							);
 
 							for ( var x = 0; x < 3; x++ ) {

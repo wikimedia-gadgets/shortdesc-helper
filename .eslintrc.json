@@ -1,0 +1,13 @@
+{
+	"extends": [
+		"wikimedia",
+		"wikimedia/language/es6"
+	],
+	"env": {
+		"browser": true
+	},
+	"rules": {
+		"no-console": 0,
+		"no-implicit-globals": 0
+	}
+}
