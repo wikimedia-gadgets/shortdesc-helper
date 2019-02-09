@@ -1,9 +1,0 @@
-{
-  "opts": {
-    "template": "node_modules/jsdoc-wmf-theme",
-    "class-hierarchy": { "showList": true }
-  },
-  "plugins": [
-    "node_modules/jsdoc-class-hierarchy"
-  ]
-}
