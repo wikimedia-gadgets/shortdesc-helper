@@ -6,56 +6,119 @@
  * |_____________________________________________________________________________|
  *
  */
-/* Shortdesc helper: v3.3.0
+/* Shortdesc helper: v3.2.7
  * Documentation at [[User:Galobtter/Shortdesc helper]]
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions, and easier editing of them
  * by giving buttons and inputbox for doing so.
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ. */
 
+
+//TODO
+
+//TODO
+
+
+
+
+//TODO remove ooui from resourceloader in gadgets-definition (test ON TESTWIKI) - STILL WAITING FOR OOUI TO LOAD BEFORE SHOWING SHORT DESCRIPTION
+
+
+
+
+
+
+var optionsConfig = [
+{
+	title: "Main",
+	preferences: [
+		new NumberOption( {
+			name: "InputWidth",
+			label: "Width of editing input",
+			defaultValue: 35
+		} ),
+		new BoleanOption( {
+			name: "AddToRedirect",
+			label: "Allow additions to redirects",
+			helptip: "When checked, redirects will have ",
+			defaultValue: true
+		} ),
+		new StringOption( {
+			name: "SaveWikidata",
+			label: "Save changes to Wikidata",
+			defaultValue: 'add',
+			values: [
+				[ 'add', 'Only on additions (default)' ],
+				[ 'all', 'On all changes' ],
+				[ 'never', 'Never' ]
+			]
+		} )
+	]
+},
+
+{
+	title: "Semi-automated options",
+	show: HasAWBAccess
+},
+
+{
+	title: "Advanced",
+	preferences: [
+		new BoleanOption( {
+			name: "ClashFix",
+			label: "Disable css used to prevent content jump.",
+			helptip: "You'd want to this if you have another script that clashes with this one\
+			, such as User:Yair_rand/WikidataInfo.js.",
+			value: false
+		} )
+	]
+}
+
+]
+
+
 /* Load when viewing a page that exists. */
-if ( mw.config.get( 'wgAction' ) === 'view' && mw.config.get( 'wgArticleId' ) !== 0 ) {
+if ( mw.config.get( 'wgAction' ) === 'view' && mw.config.get ( 'wgArticleId' ) !== 0 ) {
 	mw.loader.using( [ 'mediawiki.api' ] ).then( function () {
 
 /* Grab config variables */
 var title = mw.config.get( 'wgPageName' );
 var namespace = mw.config.get( 'wgNamespaceNumber' );
 var wgQid = mw.config.get( 'wgWikibaseItemId' );
-var language = mw.config.get( 'wgContentLanguage' );
+var language =  mw.config.get( 'wgContentLanguage' );
 var canEdit = mw.config.get( 'wgIsProbablyEditable' );
-var isRedirect = mw.config.get( 'wgIsRedirect' );
-// check if autoconfirmed, can edit the page, and disallow editing in template and category namespaces, to prevent accidental addition
+var isRedirect = mw.config.get ( 'wgIsRedirect' );
+var username = mw.config.get ( 'wgUserName' );
+//check if autoconfirmed, can edit the page, and disallow editing in template and category namespaces, to prevent accidental addition
 var allowEditing = (
 	canEdit &&
-	[ 10, 14, 710, 828, 2300, 2302 ].indexOf( namespace ) !== -1
+	![ 10, 14, 710, 828, 2300, 2302 ].includes( namespace )
 );
-var headers = {
-	'Api-User-Agent': 'Short description editer/viewer (User:Galobtter/Shortdesc helper)'
-};
 
 var API = new mw.Api( {
 	ajax: {
-		headers: headers
+		headers: {
+			'Api-User-Agent': 'Short description editer/viewer (User:Galobtter/Shortdesc helper)'
+			}
 		}
 } );
 
-var get = function ( url ) {
-	$.ajax( 'api/rest_v1/' + url );
+//Function for grabbing lead section text
+var getText = function () {
+	return API.get( {
+		action: 'query',
+		prop: 'revisions',
+		titles: title,
+		rvprop: 'content',
+		rvsection: 0,
+		rvslots: 'main',
+		formatversion: 2
+	} );
 };
 
-var post = function ( url, text ) {
-
-};
-// Function for grabbing lead section HTML
-var getHTML = function () {
-	get( 'page/html/' + title + '?sections=mwAQ&redirect=false' );
-};
-
-'page/mobile-sections-lead/Barack_Obama?redirect=false';
-
-// Get the lead section text
+//Get the lead section text
 var callPromiseText = getText();
 
-// Get the short description
+//Get the short description
 var callPromiseDescription = API.get( {
 		action: 'query',
 		titles: title,
@@ -63,26 +126,18 @@ var callPromiseDescription = API.get( {
 		formatversion: 2
 	} );
 
-// actualllllly loop through the result of getElements to find the relevant short description that is actually giving our description
-leadHTML.getElementsByClassName( 'short description' )[ 0 ].getAttribute( 'data-mw' ).parts[ 0 ].template.target.wt === 'short description';
-
-/* Define user option defaults */
-if ( window.shortdescInputWidth === undefined ) {
-	window.shortdescInputWidth = '35';
-}
-
-if ( window.shortdescAddRedirect === undefined ) {
-	window.shortdescAddRedirect = false;
-}
+/* User options */
+settings = new Settings ( )
+options = settings.load ()
 
 /* Execute main code once the short description is gotten */
 $.when( callPromiseDescription, $.ready ).then( function ( resultsDescription ) {
 var summary, change, $description, infoPopup, actionField;
 
-var response = resultsDescription[ 0 ];
-var pages = response.query.pages[ 0 ];
+var response = resultsDescription[0];
+var pages = response.query.pages[0];
 var pageDescription = pages.description;
-var isLocal = ( pages.descriptionsource === 'local' );
+var isLocal = (pages.descriptionsource === 'local') ? true: false;
 
 /* Search pattern for finding short description in wikitext.
  * Group 1 is the short description. */
@@ -92,7 +147,7 @@ var pattern = /\{\{[Ss]hort description\|(.*?)\}\}/;
 
 /* Creates "clickies", simple link buttons. */
 var Clicky = function ( descrip, text, func ) {
-	this.button = $( '<span>' )
+	this.button =  $( '<span>' )
 		.addClass( 'sdh-clicky' )
 		.append( $( '<a>' )
 			.attr( 'title', descrip )
@@ -117,21 +172,21 @@ var InfoClickyPopup = function ( text ) {
 	var self = this;
 	self.text = text;
 
-	self.infoClicky = new Clicky(
+	self.infoClicky =  new Clicky(
 		'Click for info',
 		'?',
 		function () {
 			if ( !infoPopup ) {
-				mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
+				mw.loader.using ( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then ( function () {
 					infoPopup = new OO.ui.PopupWidget( {
-						$content: $( '<span>' ).append( self.text ),
+						$content: $ ( '<span>' ).append ( self.text ),
 						$autoCloseIgnore: self.infoClicky,
 						padded: true,
 						autoClose: true,
 						width: 300,
 						position: 'after'
 					} );
-					$( '.sdh-clickies' ).append( infoPopup.$element );
+					$ ( '.sdh-clickies' ).append ( infoPopup.$element );
 					infoPopup.toggle();
 				} );
 			} else {
@@ -146,10 +201,10 @@ var InfoClickyPopup = function ( text ) {
 /* Function to check if the short description is in the wikitext
  * If it is, return the short description as defined in the text */
 var shortdescInText = function ( resultLead ) {
-	var lead = resultLead[ 0 ].query.pages[ 0 ].revisions[ 0 ].slots.main.content;
-	var match = lead.match( pattern );
+	var lead = resultLead[0].query.pages[0].revisions[0].slots.main.content;
+	var match = lead.match(pattern);
 	if ( match ) {
-		return [ true, lead, match[ 1 ] ];
+		return [ true, lead, match[1] ];
 	} else {
 		return [ false, lead, false ];
 	}
@@ -159,7 +214,7 @@ var shortdescInText = function ( resultLead ) {
 var addDescription = function ( newDescription, cancelButton ) {
 	var changes, prependText, appendText, text;
 
-	// Helper function to add quotes around text
+	//Helper function to add quotes around text
 	var quotify = function ( text ) {
 		if ( text === '' || text === 'none' ) {
 			return 'none';
@@ -170,16 +225,16 @@ var addDescription = function ( newDescription, cancelButton ) {
 
 	newDescription = newDescription.trim();
 
-	// Capitalize first letter by default unless editing local description
+	//Capitalize first letter by default unless editing local description
 	if ( !isLocal ) {
-		newDescription = newDescription.charAt( 0 ).toUpperCase() + newDescription.slice( 1 );
+		newDescription = newDescription.charAt(0).toUpperCase() + newDescription.slice(1);
 	}
 
 	if ( newDescription === '' ) {
 		newDescription = 'none';
 	}
 
-	var replacement = '{' + '{' + 'short description\|' + newDescription + '}}';
+	var replacement = '{'+'{'+'short description\|'+newDescription+'}}';
 
 	/* Appends, prepends, or replaces the lead section
 	 * depending on which of text, prependText, and appendText exists. */
@@ -192,30 +247,32 @@ var addDescription = function ( newDescription, cancelButton ) {
 			prependtext: prependText,
 			appendtext: appendText,
 			summary: summary + ' [[Wikipedia:Short description|short description]]' + changes + ' ([[User:Galobtter/Shortdesc helper|Shortdesc helper]])'
-		} ).done( function () {
-			// Reload the page
-			window.location.reload();
-		} ).fail( function ( code, jqxhr ) {
-			// Edit fails; log reason for that.
-			if ( code === 'http' && jqxhr.textStatus === 'error' ) {
-				console.log( 'HTTP error ' + jqxhr.xhr.status );
-			} else if ( code === 'http' ) {
-				console.log( 'HTTP error: ' + jqxhr.textStatus );
-			} else if ( code === 'ok-but-empty' ) {
-				console.log( 'Error: Got an empty response from the server' );
-			} else {
-				console.log( 'API error: ' + code );
-			}
-		} );
+		} ).then(
+			function () {
+				// Reload the page
+				window.location.reload()
+			},
+			function ( code, jqxhr ) {
+				// Edit fails; log reason for that.
+				if ( code === 'http' && jqxhr.textStatus === 'error' ) {
+					console.log( 'HTTP error ' + jqxhr.xhr.status );
+				} else if ( code === 'http' ) {
+					console.log( 'HTTP error: ' + jqxhr.textStatus );
+				} else if ( code === 'ok-but-empty' ) {
+					console.log( 'Error: Got an empty response from the server' );
+				} else {
+					console.log( 'API error: ' + code );
+				}
+			} );
 	};
 
 	/* Replaces the current local short description with the new one.
 	 * If the short description doesn't exist in the text, return false. */
 	var replaceAndEdit = function ( resultLead ) {
 		var output = shortdescInText( resultLead );
-		var isInText = output[ 0 ];
-		var oldtext = output[ 1 ];
-		var descriptionFromText = output[ 2 ];
+		var isInText = output[0];
+		var oldtext = output[1];
+		var descriptionFromText = output[2];
 		if ( isInText ) {
 			text = oldtext.replace( pattern, replacement );
 			makeEdit();
@@ -225,7 +282,7 @@ var addDescription = function ( newDescription, cancelButton ) {
 		}
 	};
 
-	// var change is defined by the button that was clicked
+	//var change is defined by the button that was clicked
 	if ( !change ) {
 		changes = ': ' + quotify( newDescription );
 		if ( isRedirect ) {
@@ -254,14 +311,14 @@ var addDescription = function ( newDescription, cancelButton ) {
 var textInput = function () {
 	/* If reopening the input box, show it again.
 	 * Otherwise, create the input box using OOui. */
-	if ( actionField ) {
+	if (actionField) {
 		$( '#sdh-showdescrip' ).hide( 0 );
 		actionField.toggle();
 	} else {
-		mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
+		mw.loader.using ( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then ( function () {
 			$( '#sdh-showdescrip' ).hide( 0 );
 			var length;
-			// Define the input box and buttons.
+			//Define the input box and buttons.
 			var descriptionInput = new OO.ui.TextInputWidget( {
 				autocomplete: false,
 				autofocus: true,
@@ -285,7 +342,7 @@ var textInput = function () {
 				'Cancel',
 				function () {
 					actionField.toggle();
-					$( '#sdh-showdescrip' ).show( 0 );
+					$( '#sdh-showdescrip' ).show (0);
 				},
 				[ 'safe', 'destructive' ]
 			).button;
@@ -294,10 +351,10 @@ var textInput = function () {
 				items: [ saveButton, cancelButton ]
 			} );
 
-			// On change, update character count label.
+			//On change, update character count label.
 			var updateOnChange = function () {
 				length = descriptionInput.getInputLength();
-				descriptionInput.setLabel( String( length ) );
+				descriptionInput.setLabel ( String( length ) );
 
 			};
 
@@ -311,13 +368,13 @@ var textInput = function () {
 			actionField = new OO.ui.ActionFieldLayout(
 				descriptionInput,
 				savecancelButtons, {
-					label: '', // For some dumb reason, the buttons won't align with the inputbox unless a dummy label is put
+					label: '', //For some dumb reason, the buttons won't align with the inputbox unless a dummy label is put
 					align: 'top',
 					id: [ 'sdh-editbox' ]
 				}
 			);
 
-			// Initial character count
+			//Initial character count
 			updateOnChange();
 
 			descriptionInput.on( 'change', updateOnChange );
@@ -325,8 +382,8 @@ var textInput = function () {
 
 			$( '#sdh' ).append( actionField.$element );
 
-			// Size the inputbox
-			$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', window.shortdescInputWidth + 'em' );
+			//Size the inputbox
+			$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' ); //FIXME fix on timeless to be less wide
 		} );
 	}
 };
@@ -341,12 +398,14 @@ var combineClickies = function ( clickyElements ) {
 	}
 };
 
-var appendDescription = function () {
-	// Add the main div
+var appendDescription  = function () {
+	//Add the main div
 	$( '#contentSub' ).append(
-		$( '<div>' )
-			.prop( 'id', 'sdh' )
+		$ ( '<div>' )
+			.prop ( 'id',  'sdh' )
+			.css ( 'margin-top', options.ClashFix ? '1.2em': '0' ) //FIXME: this will apply to all skins, only apply vector - use mw.util.addCSS?
 	);
+
 	if ( $description ) {
 		$( '#sdh' ).append( $description );
 	}
@@ -356,6 +415,7 @@ var updateSDH = function ( clickyElements ) {
 	combineClickies( clickyElements );
 	appendDescription();
 };
+
 
 /* Main code
  * Shows the short description and
@@ -369,22 +429,23 @@ var updateSDH = function ( clickyElements ) {
  * and added to the main wrapping div, #sdh using appendDescription.
  */
 
+
 $.when( callPromiseText, $.ready ).then( function ( result ) {
 	var clickyElements;
 	var initIsInText = false;
 
-	$description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
+	$description = $( '<div>' ).prop ( 'id',  'sdh-showdescrip' );
 
 	var output = shortdescInText( result );
-	initIsInText = output[ 0 ];
-	var initLead = output[ 1 ];
-	var descriptionFromText = output[ 2 ];
+	initIsInText = output[0];
+	var initLead = output[1];
+	var descriptionFromText = output[2];
 
-	// Handle {{Shor​t description|none}}
+	//Handle {{Shor​t description|none}}
 	if ( descriptionFromText && ( descriptionFromText.trim() === 'none' ) ) {
-		$description.append(
-			$( '<span>' )
-				.text( 'This page has deliberately no description.' )
+		$description.append (
+			$ ( '<span>' )
+				.text ( 'This page has deliberately no description.' )
 		);
 
 		clickyElements = [
@@ -392,13 +453,13 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 				'Add short description',
 				'Add',
 				function () {
-					summary = 'Changing';
+					summary =  'Changing';
 					change = true;
 					pageDescription = '';
 					textInput();
 				}
 			).button,
-			new InfoClickyPopup(
+			new InfoClickyPopup (
 				'A page is deliberately set to have an empty short description using the code {{Shor​t description|none}}. Note, however, that for now the Wikidata short description is actually still shown if available.'
 			).$element
 		];
@@ -407,11 +468,12 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 		return;
 	}
 
-	if ( pageDescription ) {
+	if ( pageDescription )
+	{
 		$description.append(
 			$( '<span>' )
 				.text( pageDescription )
-				.addClass( 'mw-page-description ' )
+				.addClass( 'mw-page-description ')
 		);
 
 		if ( !isLocal ) {
@@ -421,18 +483,18 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 					.attr( 'href', 'https://www.wikidata.org/wiki/Special:SetLabelDescriptionAliases/' + wgQid + '/' + language )
 					.addClass( 'sdh-wikidata-description' )
 					.text( 'Wikidata' )
-				) ];
+				) ]
 		}
 
-		if ( allowEditing ) {
+		if ( allowEditing )  {
 			if ( isLocal ) {
-				if ( initIsInText ) {
+				if (initIsInText) {
 					clickyElements = [
 						new Clicky(
 							'Edit short description',
 							'Edit',
 							function () {
-								summary = 'Changing';
+								summary =  'Changing';
 								change = true;
 								textInput();
 							}
@@ -448,7 +510,7 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 								textInput();
 							}
 						).button,
-						new InfoClickyPopup(
+						new InfoClickyPopup (
 							'<p>While this description can be overridden with another local short description, it cannot be directly edited. This is most likely because it is automatically generated by the article\'s infobox or some other template. See <a href = "/wiki/Wikipedia:WikiProject_Short_descriptions#Auto-generated_and_bot_generated_Descriptions"> this page</a> for more info.</p>'
 						).$element
 					];
@@ -459,27 +521,27 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 						'Import description from Wikidata',
 						'Import',
 						function () {
-							// Disable all clicky buttons
+							//Disable all clicky buttons
 							$( '.sdh-clicky a' )
-								.css( 'pointer-events', 'none' )
-								.off();
+								.css ( 'pointer-events', 'none' )
+								.off ();
 
-							// Add processing ... animation
+							//Add processing ... animation
 							$( '#sdh-showdescrip ' ).append(
-								$( '<div>' )
-									.addClass( 'sdh-processing' )
-									.css( 'margin-left', '0.5em' )
+								$( '<div>')
+									.addClass ( 'sdh-processing' )
+									.css ( 'margin-left', '0.5em' ) //FIXME move to CSS file
 							);
 
 							for ( var x = 0; x < 3; x++ ) {
 								$( '.sdh-processing' ).append(
 									$( '<div>' )
-										.addClass( [ 'sdh-processing-dot', 'sdh-processing-dot-' + x ] )
-										.text( '.' )
+										.addClass ( [ 'sdh-processing-dot', 'sdh-processing-dot-' + x ] )
+										.text ( '.' )
 								);
 							}
 
-							summary = 'Importing Wikidata';
+							summary = "Importing Wikidata";
 							addDescription( pageDescription );
 						}
 					).button,
@@ -487,30 +549,30 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 						'Edit and import description from Wikidata',
 						'Edit and Import',
 						function () {
-							summary = 'Adding local';
+							summary = "Adding local";
 							textInput();
 						}
 					).button
 				);
-				console.log( clickyElements );
+				console.log ( clickyElements );
 			}
 		}
-		updateSDH( clickyElements );
+		updateSDH(clickyElements);
 	} else if (
 		namespace === 0 &&
-		( !isRedirect || ( isRedirect && window.shortdescAddRedirect ) )
+		( !isRedirect || ( isRedirect && options.AddToRedirect ) )
 		) {
-		// indicate that description is missing
+		//indicate that description is missing
 		$description = (
 			$( '<div>' )
-				.prop( 'id', 'sdh-showdescrip' )
+				.prop( 'id', 'sdh-showdescrip')
 				.append(
 					$( '<span>' )
-						.addClass( 'sdh-missing-description' )
-						.text( 'Missing ' ),
+						.addClass ( 'sdh-missing-description' )
+						.text ( 'Missing ' ),
 					$( '<a>' )
 						.attr( 'href', '/wiki/Wikipedia:Short description' )
-						.text( ( isRedirect ? 'redirect' : 'article' ) + ' description' )
+						.text( (isRedirect ? 'redirect' : 'article') + ' description' )
 				)
 		);
 
@@ -520,13 +582,13 @@ $.when( callPromiseText, $.ready ).then( function ( result ) {
 					'Add description',
 					'Add',
 					function () {
-						summary = 'Adding';
+						summary = "Adding";
 						textInput();
 					}
 				).button
 			];
 		}
-		updateSDH( clickyElements );
+		updateSDH(clickyElements);
 	}
 } );
 
