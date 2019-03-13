@@ -21,8 +21,8 @@ window.sdhmain = function () {
 	var canEdit = mw.config.get( 'wgIsProbablyEditable' );
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
 	var server = mw.config.get( 'wgServer' );
-	/* check if autoconfirmed, can edit the page, and disallow editing of templates and categories
-	** to prevent accidental addition */
+	/* Check if autoconfirmed, can edit the page, and disallow editing of templates and categories
+	 * to prevent accidental addition */
 	var allowEditing = (
 		canEdit &&
 		[ 10, 14, 710, 828, 2300, 2302 ].indexOf( namespace ) === -1
@@ -50,7 +50,7 @@ window.sdhmain = function () {
 	};
 
 	// Function for grabbing HTML
-	var getHTML = function ( section ) {
+	var getHtml = function ( section ) {
 		return request(
 			'GET',
 			'page/html/' + title,
@@ -63,12 +63,15 @@ window.sdhmain = function () {
 	};
 
 	// Function for posting HTML (i.e, saving the page)
-	var postHTML = function () {
+	var postHtml = function ( html, summary ) {
 		mw.loader.using( 'mediawiki.user' ).then( function () {
 			return request(
 				'POST',
 				'page/html' + title,
 				{
+					html: html,
+					summary: summary,
+					// eslint-disable-next-line camelcase
 					csrf_token: mw.user.tokens.get( 'editToken' )
 				}
 			);
@@ -76,7 +79,7 @@ window.sdhmain = function () {
 	};
 
 	// Get the lead section html (mwAQ = lead section)
-	var callPromiseHTML = getHTML( 'mwAQ' );
+	var callPromiseHTML = getHtml( 'mwAQ' );
 
 	// Get the short description
 	var callPromiseDescription = request( 'GET', 'page/mobile-sections-lead/' + title, { redirect: 'false' }, 'json' );
@@ -92,13 +95,13 @@ window.sdhmain = function () {
 
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription, $.ready ).then( function ( result ) {
-		var summary, change, $description, infoPopup, actionField;
+		var type, change, $description, infoPopup, actionField;
 		var descriptionSection = 'mwAQ';
 		var pageDescription = result[ 0 ].description.trim();
 		var isLocal = ( result[ 0 ].description_source === 'local' );
 
 		/* Gets the short description from the HTML.
-		** If can find the short description, but description is not editable, editable is false  */
+		 * If can find the short description, but description is not editable, editable is false  */
 		var getDescriptionFromHtml = function ( html ) {
 			var parts, description, editable;
 			var htmlObject = $( $.parseHTML( html ) );
@@ -173,7 +176,7 @@ window.sdhmain = function () {
 		};
 
 		/* Function to check if the short description is in the wikitext
- 		** If it is, return the short description as defined in the text */
+ 		 * If it is, return the short description as defined in the text */
 		var shortdescInText = function ( resultLead ) {
 			var lead = resultLead[ 0 ].query.pages[ 0 ].revisions[ 0 ].slots.main.content;
 			var match = lead.match( pattern );
@@ -187,7 +190,6 @@ window.sdhmain = function () {
 		/* This function adds or replaces short descriptions. */
 		var addDescription = function ( newDescription, cancelButton ) {
 			var changes, prependText, appendText, text;
-
 			// Helper function to add quotes around text
 			var quotify = function ( text ) {
 				if ( text === '' || text === 'none' ) {
@@ -198,49 +200,13 @@ window.sdhmain = function () {
 			};
 
 			/* Appends, prepends, or replaces the lead section
-	 		** depending on which of text, prependText, and appendText exists. */
-			var makeEdit = function () {
-				mw.loader.using( 'mediawiki.user' );
-				var edittoken = mw.user.tokens.get( 'editToken' );
-				API.postWithToken( 'csrf', {
-					action: 'edit',
-					section: 0,
-					text: text,
-					title: title,
-					prependtext: prependText,
-					appendtext: appendText,
-					summary: summary + ' [[Wikipedia:Short description|short description]]' + changes + ' ([[User:Galobtter/Shortdesc helper|Shortdesc helper]])'
-				} ).done( function () {
+	 		 * depending on which of text, prependText, and appendText exists. */
+			var makeEdit = function ( newHTML, changes ) {
+				var summary = type + ' [[Wikipedia:Short description|short description]]' + changes + ' ([[User:Galobtter/Shortdesc helper|Shortdesc helper]])';
+				postHtml( newHTML, summary ).then( function () {
 					// Reload the page
 					window.location.reload();
-				} ).fail( function ( code, jqxhr ) {
-					// Edit fails; log reason for that.
-					if ( code === 'http' && jqxhr.textStatus === 'error' ) {
-						console.log( 'HTTP error ' + jqxhr.xhr.status );
-					} else if ( code === 'http' ) {
-						console.log( 'HTTP error: ' + jqxhr.textStatus );
-					} else if ( code === 'ok-but-empty' ) {
-						console.log( 'Error: Got an empty response from the server' );
-					} else {
-						console.log( 'API error: ' + code );
-					}
 				} );
-			};
-
-			/* Replaces the current local short description with the new one.
-	 		** If the short description doesn't exist in the text, return false. */
-			var replaceAndEdit = function ( resultLead ) {
-				var output = shortdescInText( resultLead );
-				var isInText = output[ 0 ];
-				var oldtext = output[ 1 ];
-				var descriptionFromText = output[ 2 ];
-				if ( isInText ) {
-					text = oldtext.replace( pattern, replacement );
-					makeEdit();
-					return true;
-				} else {
-					return false;
-				}
 			};
 
 			newDescription = newDescription.trim();
@@ -255,34 +221,62 @@ window.sdhmain = function () {
 				newDescription = 'none';
 			}
 
-			// var change is defined by the button that was clicked
-			if ( !change ) {
-				changes = ': ' + quotify( newDescription );
-				if ( isRedirect ) {
-					appendText = '\n' + replacement;
-				} else {
-					prependText = replacement + '\n';
-				}
-				makeEdit();
-			} else {
-				changes = ' from ' + quotify( pageDescription ) + ' to ' + quotify( newDescription );
+			getHtml().then( function ( result ) {
+				var oldHtml = result[ 0 ];
+				var newHtml;
+				var replacement = '{{short description|' + newDescription + '}}';
 
-				/* Get the lead section text again right before making the edit
-		 		** to avoid issues with edit conflicts, and make the edit. */
-				$.when( getText(), $.ready ).then( function ( result ) {
-					if ( !replaceAndEdit( result ) ) {
-						cancelButton.setDisabled( false );
-						console.log( 'Shortdesc helper: Unable to find short description in page' );
-						mw.notify( 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.', { autoHide: false } );
-					}
+				// eslint-disable-next-line camelcase
+				request( 'POST', 'transform/wikitext/to/html', { wikitext: replacement, body_only: 'true' } ).then( function ( result ) {
+					console.log( result );
 				} );
+				/*
+				// var change is defined by the button that was clicked
+				if ( !change ) {
+					changes = ': ' + quotify( newDescription );
+					if ( isRedirect ) {
+						appendText = '\n' + replacement;
+					} else {
+						prependText = replacement + '\n';
+					}
+				} else {
+					changes = ' from ' + quotify( pageDescription ) + ' to ' + quotify( newDescription );
+
+					/* Get the HTML again right before making the edit
+					* to avoid issues with edit conflicts, and make the edit.
+					*//*
+					$.when( getHtml( descriptionSection ), $.ready ).then( function ( result ) {
+						if ( !replaceAndEdit( result ) ) {
+							cancelButton.setDisabled( false );
+							console.log( 'Shortdesc helper: Unable to find short description in page' );
+							mw.notify( 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.', { autoHide: false } );
+						}
+
+					} );
+				}
+				makeEdit( newHtml, changes );*/
+			} );
+
+			/* Replaces the current local short description with the new one.
+	 		* If the short description doesn't exist in the text, return false. */
+			/* var output = shortdescInText( resultLead );
+			var isInText = output[ 0 ];
+			var oldtext = output[ 1 ];
+			var descriptionFromText = output[ 2 ];
+			if ( isInText ) {
+				text = oldtext.replace( pattern, replacement );
+				makeEdit();
+				return true;
+			} else {
+				return false;
 			}
+			}*/
 		};
 
 		/* Creates input box with save and cancel buttons. */
 		var textInput = function () {
 			/* If reopening the input box, show it again.
-	 		** Otherwise, create the input box using OOui. */
+	 		 * Otherwise, create the input box using OOui. */
 			if ( actionField ) {
 				$( '#sdh-showdescrip' ).hide( 0 );
 				actionField.toggle();
@@ -388,15 +382,15 @@ window.sdhmain = function () {
 		};
 
 		/* Main code
-		* Shows the short description and
-		* depending on various factors, such as:
-		* Whether the description exists
-		* Whether the description is on wikidata or not
-		* Whether the page is in mainspace.
-		* Show the relevant buttons ("clickies"), which are stored as a list in clickyElements
-		* $description stores the html generated.
-		* Once clickyElements is generated, it is added to $description using combineClickies
-		* and added to the main wrapping div, #sdh using appendDescription.
+		 * Shows the short description and
+		 * depending on various factors, such as:
+		 * Whether the description exists
+		 * Whether the description is on wikidata or not
+		 * Whether the page is in mainspace.
+		 * Show the relevant buttons ("clickies"), which are stored as a list in clickyElements
+		 * $description stores the html generated.
+		 * Once clickyElements is generated, it is added to $description using combineClickies
+		 * and added to the main wrapping div, #sdh using appendDescription.
 		*/
 		$.when( callPromiseHTML, $.ready ).then( function ( leadResult ) {
 			var clickyElements;
@@ -405,10 +399,10 @@ window.sdhmain = function () {
 			var editable = output[ 1 ];
 
 			/* If it is a local description and there is no description in the lead,
-			** search entire page */
+			 * search entire page */
 			if ( isLocal && !descriptionFromText ) {
 				descriptionSection = '';
-				getHTML().then( function ( totalResult ) {
+				getHtml().then( function ( totalResult ) {
 					output = getDescriptionFromHtml( totalResult[ 0 ] );
 					descriptionFromText = output[ 0 ];
 					editable = output[ 1 ];
@@ -430,7 +424,7 @@ window.sdhmain = function () {
 						'Add short description',
 						'Add',
 						function () {
-							summary = 'Changing';
+							type = 'Changing';
 							change = true;
 							pageDescription = '';
 							textInput();
@@ -470,7 +464,7 @@ window.sdhmain = function () {
 									'Edit short description',
 									'Edit',
 									function () {
-										summary = 'Changing';
+										type = 'Changing';
 										change = true;
 										textInput();
 									}
@@ -482,7 +476,7 @@ window.sdhmain = function () {
 									'Override current short description',
 									'Override',
 									function () {
-										summary = 'Adding custom';
+										type = 'Adding custom';
 										textInput();
 									}
 								).button,
@@ -518,7 +512,7 @@ window.sdhmain = function () {
 										);
 									}
 
-									summary = 'Importing Wikidata';
+									type = 'Importing Wikidata';
 									addDescription( pageDescription );
 								}
 							).button,
@@ -526,7 +520,7 @@ window.sdhmain = function () {
 								'Edit and import description from Wikidata',
 								'Edit and Import',
 								function () {
-									summary = 'Adding local';
+									type = 'Adding local';
 									textInput();
 								}
 							).button
@@ -558,7 +552,7 @@ window.sdhmain = function () {
 							'Add description',
 							'Add',
 							function () {
-								summary = 'Adding';
+								type = 'Adding';
 								textInput();
 							}
 						).button
