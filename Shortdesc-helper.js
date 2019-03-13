@@ -25,7 +25,7 @@ window.sdhmain = function () {
 	** to prevent accidental addition */
 	var allowEditing = (
 		canEdit &&
-		[ 10, 14, 710, 828, 2300, 2302 ].indexOf( namespace ) !== -1
+		[ 10, 14, 710, 828, 2300, 2302 ].indexOf( namespace ) === -1
 	);
 	var headers = {
 		'Api-User-Agent': 'Short description editer/viewer (User:Galobtter/Shortdesc helper)'
@@ -92,19 +92,20 @@ window.sdhmain = function () {
 
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription, $.ready ).then( function ( result ) {
-		var summary, change, $description, infoPopup, actionField, descriptionSection;
-
-		var pageDescription = result.description;
-		var isLocal = ( result.description_source === 'local' );
+		var summary, change, $description, infoPopup, actionField;
+		var descriptionSection = 'mwAQ';
+		var pageDescription = result[ 0 ].description.trim();
+		var isLocal = ( result[ 0 ].description_source === 'local' );
 
 		/* Gets the short description from the HTML.
 		** If can find the short description, but description is not editable, editable is false  */
-		var getDescriptionFromHTML = function ( HTML ) {
-			var i, parts, description, editable;
-			var elements = HTML.getElementsByClassName( 'short description' );
-			for ( i; i < elements.length; i++ ) {
-				parts = elements[ i ].getAttribute( 'data-mw' ).parts[ 0 ];
-				description = parts.params[ '1' ].wt;
+		var getDescriptionFromHtml = function ( html ) {
+			var parts, description, editable;
+			var htmlObject = $( $.parseHTML( html ) );
+			htmlObject.find( '.shortdescription' ).each( function () {
+				parts = JSON.parse( $( this ).attr( 'data-mw' ) ).parts[ 0 ];
+				description = parts.template.params[ 1 ].wt;
+				description = description.trim();
 				if ( description === pageDescription ) {
 					if ( parts.template.target.wt === 'short description' ) {
 						editable = true;
@@ -112,7 +113,7 @@ window.sdhmain = function () {
 						editable = false;
 					}
 				}
-			}
+			} );
 			return [ description, editable ];
 		};
 
@@ -361,8 +362,8 @@ window.sdhmain = function () {
 		};
 
 		var combineClickies = function ( clickyElements ) {
+			var clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 			if ( clickyElements ) {
-				var clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 				for ( var x in clickyElements ) {
 					clickies.append( clickyElements[ x ] );
 				}
@@ -397,19 +398,20 @@ window.sdhmain = function () {
 		* Once clickyElements is generated, it is added to $description using combineClickies
 		* and added to the main wrapping div, #sdh using appendDescription.
 		*/
-		$.when( callPromiseHTML, $.ready ).then( function ( leadHTML ) {
+		$.when( callPromiseHTML, $.ready ).then( function ( leadResult ) {
 			var clickyElements;
-			var output = getDescriptionFromHTML( leadHTML );
-			var descriptionFromText = output[ 1 ];
-			var editable = output[ 2 ];
+			var output = getDescriptionFromHtml( leadResult[ 0 ] );
+			var descriptionFromText = output[ 0 ];
+			var editable = output[ 1 ];
 
 			/* If it is a local description and there is no description in the lead,
 			** search entire page */
 			if ( isLocal && !descriptionFromText ) {
-				getHTML().then( function ( totalHTML ) {
-					output = getDescriptionFromHTML( totalHTML );
-					descriptionFromText = output[ 1 ];
-					editable = output[ 2 ];
+				descriptionSection = '';
+				getHTML().then( function ( totalResult ) {
+					output = getDescriptionFromHtml( totalResult[ 0 ] );
+					descriptionFromText = output[ 0 ];
+					editable = output[ 1 ];
 				} );
 			}
 
@@ -417,7 +419,7 @@ window.sdhmain = function () {
 
 			// eslint-disable-next-line no-irregular-whitespace
 			// Handle {{Shor​t description|none}}
-			if ( descriptionFromText && ( descriptionFromText.trim() === 'none' ) ) {
+			if ( descriptionFromText && ( descriptionFromText === 'none' ) ) {
 				$description.append(
 					$( '<span>' )
 						.text( 'This page has deliberately no description.' )
