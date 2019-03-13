@@ -75,7 +75,7 @@ window.sdhmain = function () {
 		} );
 	};
 
-	// Get the lead section html (mwAQ  = lead section)
+	// Get the lead section html (mwAQ = lead section)
 	var callPromiseHTML = getHTML( 'mwAQ' );
 
 	// Get the short description
@@ -97,8 +97,8 @@ window.sdhmain = function () {
 		var pageDescription = result.description;
 		var isLocal = ( result.description_source === 'local' );
 
-		/* loop through the result of getting html to find the relevant short description
-		** that is actually giving our description */
+		/* Gets the short description from the HTML.
+		** If can find the short description, but description is not editable, editable is false  */
 		var getDescriptionFromHTML = function ( HTML ) {
 			var i, parts, description, editable;
 			var elements = HTML.getElementsByClassName( 'short description' );
@@ -397,16 +397,23 @@ window.sdhmain = function () {
 		* Once clickyElements is generated, it is added to $description using combineClickies
 		* and added to the main wrapping div, #sdh using appendDescription.
 		*/
-		$.when( callPromiseHTML, $.ready ).then( function ( result ) {
+		$.when( callPromiseHTML, $.ready ).then( function ( leadHTML ) {
 			var clickyElements;
-			var initIsInText = false;
+			var output = getDescriptionFromHTML( leadHTML );
+			var descriptionFromText = output[ 1 ];
+			var editable = output[ 2 ];
+
+			/* If it is a local description and there is no description in the lead,
+			** search entire page */
+			if ( isLocal && !descriptionFromText ) {
+				getHTML().then( function ( totalHTML ) {
+					output = getDescriptionFromHTML( totalHTML );
+					descriptionFromText = output[ 1 ];
+					editable = output[ 2 ];
+				} );
+			}
 
 			$description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
-
-			var output = shortdescInText( result );
-			initIsInText = output[ 0 ];
-			var initLead = output[ 1 ];
-			var descriptionFromText = output[ 2 ];
 
 			// eslint-disable-next-line no-irregular-whitespace
 			// Handle {{Shor​t description|none}}
@@ -455,7 +462,7 @@ window.sdhmain = function () {
 
 				if ( allowEditing ) {
 					if ( isLocal ) {
-						if ( initIsInText ) {
+						if ( editable ) {
 							clickyElements = [
 								new Clicky(
 									'Edit short description',
