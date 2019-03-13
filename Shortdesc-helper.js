@@ -8,8 +8,8 @@
  */
 /* Shortdesc helper: v3.3.0
  * Documentation at [[User:Galobtter/Shortdesc helper]]
- * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions, and easier editing of them
- * by giving buttons and inputbox for doing so.
+ * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
+ * and easier editing of them by giving buttons and inputbox for doing so.
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ. */
 
 /* Load when viewing a page that exists. */
@@ -23,6 +23,7 @@ var wgQid = mw.config.get( 'wgWikibaseItemId' );
 var language = mw.config.get( 'wgContentLanguage' );
 var canEdit = mw.config.get( 'wgIsProbablyEditable' );
 var isRedirect = mw.config.get( 'wgIsRedirect' );
+var server = mw.config.get( 'wgServer' );
 // check if autoconfirmed, can edit the page, and disallow editing in template and category namespaces, to prevent accidental addition
 var allowEditing = (
 	canEdit &&
@@ -32,39 +33,29 @@ var headers = {
 	'Api-User-Agent': 'Short description editer/viewer (User:Galobtter/Shortdesc helper)'
 };
 
-var API = new mw.Api( {
-	ajax: {
-		headers: headers
-		}
-} );
-
 var get = function ( url ) {
-	$.ajax( 'api/rest_v1/' + url );
+	return $.ajax( {
+		method: 'GET',
+		url: server + '/api/rest_v1/' + url,
+		headers: headers,
+		dataType: 'json'
+	} );
 };
 
 var post = function ( url, text ) {
 
 };
+
 // Function for grabbing lead section HTML
 var getHTML = function () {
-	get( 'page/html/' + title + '?sections=mwAQ&redirect=false' );
+	return get( 'page/html/' + title + '?sections=mwAQ&redirect=false' );
 };
 
-'page/mobile-sections-lead/Barack_Obama?redirect=false';
-
-// Get the lead section text
-var callPromiseText = getText();
+// Get the lead section html
+var callPromiseHTML = getHTML();
 
 // Get the short description
-var callPromiseDescription = API.get( {
-		action: 'query',
-		titles: title,
-		prop: 'description',
-		formatversion: 2
-	} );
-
-// actualllllly loop through the result of getElements to find the relevant short description that is actually giving our description
-leadHTML.getElementsByClassName( 'short description' )[ 0 ].getAttribute( 'data-mw' ).parts[ 0 ].template.target.wt === 'short description';
+var callPromiseDescription = get( 'page/mobile-sections-lead/' + title + '?redirect=false' );
 
 /* Define user option defaults */
 if ( window.shortdescInputWidth === undefined ) {
@@ -76,17 +67,27 @@ if ( window.shortdescAddRedirect === undefined ) {
 }
 
 /* Execute main code once the short description is gotten */
-$.when( callPromiseDescription, $.ready ).then( function ( resultsDescription ) {
+$.when( callPromiseDescription, $.ready ).then( function ( result ) {
 var summary, change, $description, infoPopup, actionField;
 
-var response = resultsDescription[ 0 ];
-var pages = response.query.pages[ 0 ];
-var pageDescription = pages.description;
-var isLocal = ( pages.descriptionsource === 'local' );
+var pageDescription = result.description;
+var isLocal = ( result.description_source === 'local' );
 
-/* Search pattern for finding short description in wikitext.
- * Group 1 is the short description. */
-var pattern = /\{\{[Ss]hort description\|(.*?)\}\}/;
+/* loop through the result of getting lead html to find the relevant short description
+** that is actually giving our description */
+var getDescriptionFromHTML = function ( HTML ) {
+	var i, parts, description;
+	var elements = HTML.getElementsByClassName( 'short description' );
+	for ( i; i < elements.length; i++ ) {
+		parts = elements[ i ].getAttribute( 'data-mw' ).parts[ 0 ];
+		description = parts.params[ '1' ].wt;
+		if ( description === pageDescription ) {
+			if ( parts.template.target.wt === 'short description' ) {
+				return description;
+			}
+		}
+	}
+};
 
 /* UI functions: Buttons */
 
@@ -97,8 +98,8 @@ var Clicky = function ( descrip, text, func ) {
 		.append( $( '<a>' )
 			.attr( 'title', descrip )
 			.text( text )
-			.click( func )
-		 );
+			.on( 'click', func )
+		);
 };
 
 /* Creates OOui buttons, which are used for save and cancel. */
@@ -369,7 +370,8 @@ var updateSDH = function ( clickyElements ) {
  * and added to the main wrapping div, #sdh using appendDescription.
  */
 
-$.when( callPromiseText, $.ready ).then( function ( result ) {
+$.when( callPromiseHTML, $.ready ).then( function ( result ) {
+
 	var clickyElements;
 	var initIsInText = false;
 
