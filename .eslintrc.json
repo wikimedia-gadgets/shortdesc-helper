@@ -9,6 +9,7 @@
 	},
 	"rules": {
 		"one-var": "off",
-		"indent": "off"
+		"no-jquery/no-global-selector": "off",
+		"no-jquery/no-animate-toggle": "off"
 	}
 }
