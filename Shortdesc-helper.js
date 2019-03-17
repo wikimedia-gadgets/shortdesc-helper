@@ -10,8 +10,10 @@
  * Documentation at [[User:Galobtter/Shortdesc helper]]
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
  * and easier editing of them by giving buttons and inputbox for doing so.
- * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ. */
-
+ * This gadget only works on the English Wikipedia: see [[User:Galobtter/Shortdesc helper#Usage]].
+ * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ.
+*/
+/* #TODO may be faster to grab the entire HTML (rather than lead section) due to better caching? per cURL testing (at-least on decent internet - but still parsoid HTML pretty large, essentially doubling the download on ''every'' page) */
 window.sdhmain = function () {
 	/* Grab config variables */
 	var title = mw.config.get( 'wgPageName' );
@@ -49,7 +51,7 @@ window.sdhmain = function () {
 		return $.ajax( requestVars );
 	};
 
-	// Function for grabbing HTML
+	// Function for grabbing HTML of the page
 	var getHtml = function ( section ) {
 		return request(
 			'GET',
@@ -84,30 +86,79 @@ window.sdhmain = function () {
 	// Get the short description
 	var callPromiseDescription = request( 'GET', 'page/mobile-sections-lead/' + title, { redirect: 'false' }, 'json' );
 
-	/* Define user option defaults */
-	if ( window.shortdescInputWidth === undefined ) {
-		window.shortdescInputWidth = '35';
-	}
+	var CheckboxOption = mw.libs.libSettings.CheckboxOption;
+	var NumberOption = mw.libs.libSettings.NumberOption;
+	var DropdownOption = mw.libs.libSettings.DropdownOption;
 
-	if ( window.shortdescAddRedirect === undefined ) {
-		window.shortdescAddRedirect = false;
-	}
+	var optionsConfig = [
+		{
+			title: 'Shortdesc-helper',
+			preferences: [
+				new NumberOption( {
+					name: 'InputWidth',
+					label: 'Width of editing input in em (default 35)',
+					helptip: 'worth a damn',
+					defaultValue: 35,
+					UIconfig: {
+						min: 10,
+						max: 400,
+						validate: /\d\d/
+					}
+				} ),
+				new CheckboxOption( {
+					name: 'AddToRedirect',
+					label: 'Allow additions of short descriptions to redirects',
+					help: 'When checked, redirects will have an "add" button to add a short description. (default off)',
+					defaultValue: false
+				} ),
+				new DropdownOption( {
+					name: 'SaveWikidata',
+					label: 'Save changes to Wikidata',
+					help: 'foooooo ',
+					defaultValue: 'add',
+					values: [
+						{ data: 'add', label: 'Only on additions (default)' },
+						{ data: 'all', label: 'On all changes' },
+						{ data: 'never', label: 'Never' }
+					]
+				} ),
+				new CheckboxOption( {
+					name: 'ClashFix',
+					label: 'Disable css used to prevent content jump.',
+					help: "You'd want to this if you have another script that clashes with this one, such as User:Yair_rand/WikidataInfo.js.",
+					defaultValue: false
+				} )
+			]
+		}
+	];
+
+	var settings = new mw.libs.libSettings.Settings( {
+		scriptName: 'Shortdesc-helper',
+		helpInline: true,
+		size: 'medium',
+		height: 350,
+		optionsConfig: optionsConfig
+	} );
+
+	var options = settings.get();
 
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription, $.ready ).then( function ( result ) {
 		var type, change, $description, infoPopup, actionField;
 		var descriptionSection = 'mwAQ';
-		var pageDescription = result[ 0 ].description.trim();
+		var pageDescription = result[ 0 ].description ? result[ 0 ].description.trim() : result[ 0 ].description;
 		var isLocal = ( result[ 0 ].description_source === 'local' );
 
 		/* Gets the short description from the HTML.
 		 * If can find the short description, but description is not editable, editable is false  */
 		var getDescriptionFromHtml = function ( html ) {
-			var parts, description, editable;
+			var parts, description, editable, value;
 			var htmlObject = $( $.parseHTML( html ) );
 			htmlObject.find( '.shortdescription' ).each( function () {
 				parts = JSON.parse( $( this ).attr( 'data-mw' ) ).parts[ 0 ];
-				description = parts.template.params[ 1 ].wt;
+				value = parts.template.params[ 1 ];
+				// Grab param of {{short description}} if that exists, else grab the inner html.
+				description = value ? value.wt : $( this ).html();
 				description = description.trim();
 				if ( description === pageDescription ) {
 					if ( parts.template.target.wt === 'short description' ) {
@@ -134,9 +185,10 @@ window.sdhmain = function () {
 		};
 
 		/* Creates OOui buttons, which are used for save and cancel. */
-		var OOuiClicky = function ( descrip, text, func, flags ) {
+		var OOuiClicky = function ( descrip, text, func, flags, icon ) {
 			this.button = new OO.ui.ButtonWidget( {
 				label: text,
+				icon: icon,
 				title: descrip,
 				flags: flags,
 				classes: [ 'sdh-ooui-clicky' ]
@@ -245,7 +297,7 @@ window.sdhmain = function () {
 					/* Get the HTML again right before making the edit
 					* to avoid issues with edit conflicts, and make the edit.
 					*//*
-					$.when( getHtml( descriptionSection ), $.ready ).then( function ( result ) {
+					$.when( getHtml( descriptionSection ) ).then( function ( result ) {
 						if ( !replaceAndEdit( result ) ) {
 							cancelButton.setDisabled( false );
 							console.log( 'Shortdesc helper: Unable to find short description in page' );
@@ -312,8 +364,24 @@ window.sdhmain = function () {
 						[ 'safe', 'destructive' ]
 					).button;
 
+					var settingsButton = new OO.ui.ButtonWidget( {
+						icon: 'settings',
+						framed: false,
+						title: 'Settings',
+						flags: [ 'safe' ],
+						classes: [ 'sdh-ooui-clicky' ]
+					} ).on( 'click', function () {
+						settings.display().then( function ( windowManager ) {
+							windowManager.on( 'closing', function ( win, closed ) {
+								closed.then( function () {
+									window.location.reload();
+								} );
+							} );
+						} );
+					} );
+
 					var savecancelButtons = new OO.ui.ButtonGroupWidget( {
-						items: [ saveButton, cancelButton ]
+						items: [ saveButton, cancelButton, settingsButton ]
 					} );
 
 					// On change, update character count label.
@@ -350,7 +418,7 @@ window.sdhmain = function () {
 					$( '#sdh' ).append( actionField.$element );
 
 					// Size the inputbox
-					$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', window.shortdescInputWidth + 'em' );
+					$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' );
 				} );
 			}
 		};
@@ -530,7 +598,7 @@ window.sdhmain = function () {
 				updateSDH( clickyElements );
 			} else if (
 				namespace === 0 &&
-				( !isRedirect || ( isRedirect && window.shortdescAddRedirect ) )
+				( !isRedirect || ( isRedirect && options.AddToRedirect ) )
 			) {
 				// indicate that description is missing
 				$description = (
@@ -571,5 +639,8 @@ if (
 	!mw.config.get( 'wgDiffOldId' ) &&
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
-	window.sdhmain();
+	mw.loader.load( 'http://localhost/extensions-trunk/libSettings/modules/index.css', 'text/css' );
+	mw.loader.getScript( 'http://localhost/index.js' ).then( function () {
+		window.sdhmain();
+	} );
 }
