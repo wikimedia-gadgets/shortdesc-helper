@@ -372,10 +372,12 @@ window.sdhmain = function () {
 						classes: [ 'sdh-ooui-clicky' ]
 					} ).on( 'click', function () {
 						settings.display().then( function ( windowManager ) {
-							windowManager.on( 'closing', function ( win, closed ) {
-								closed.then( function () {
-									window.location.reload();
-								} );
+							windowManager.on( 'closing', function ( win, closed, data ) {
+								if ( data ) {
+									data.then( function () {
+										window.location.reload();
+									} );
+								}
 							} );
 						} );
 					} );
