@@ -371,15 +371,7 @@ window.sdhmain = function () {
 						flags: [ 'safe' ],
 						classes: [ 'sdh-ooui-clicky' ]
 					} ).on( 'click', function () {
-						settings.display().then( function ( windowManager ) {
-							windowManager.on( 'closing', function ( win, closed, data ) {
-								if ( data ) {
-									data.then( function () {
-										window.location.reload();
-									} );
-								}
-							} );
-						} );
+						settings.display();
 					} );
 
 					var savecancelButtons = new OO.ui.ButtonGroupWidget( {
