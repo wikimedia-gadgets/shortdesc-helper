@@ -229,6 +229,9 @@ window.sdhmain = function () {
 
 		/* Function to check if the short description is in the wikitext
  		 * If it is, return the short description as defined in the text */
+		 /* TODO FIX ERROR WHEN VIEW MEDIAWIKI PAGES ( e.g MediaWiki:Common.js ) or any other time when lead doesn't exist
+		 /* check if lead exists; if it doesn't, exit
+		 /* actually, I dont' think this function is used anymore sooooo fix the parsoid thing */
 		var shortdescInText = function ( resultLead ) {
 			var lead = resultLead[ 0 ].query.pages[ 0 ].revisions[ 0 ].slots.main.content;
 			var match = lead.match( pattern );
