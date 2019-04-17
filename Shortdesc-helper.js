@@ -13,7 +13,6 @@
  * This gadget only works on the English Wikipedia: see [[User:Galobtter/Shortdesc helper#Usage]].
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ.
 */
-/* #TODO may be faster to grab the entire HTML (rather than lead section) due to better caching? per cURL testing (at-least on decent internet - but still parsoid HTML pretty large, essentially doubling the download on ''every'' page) */
 window.sdhmain = function () {
 	/* Grab config variables */
 	var title = mw.config.get( 'wgPageName' );
@@ -86,6 +85,7 @@ window.sdhmain = function () {
 	// Get the short description
 	var callPromiseDescription = request( 'GET', 'page/mobile-sections-lead/' + title, { redirect: 'false' }, 'json' );
 
+	/* Settings */
 	var CheckboxOption = mw.libs.libSettings.CheckboxOption;
 	var NumberOption = mw.libs.libSettings.NumberOption;
 	var DropdownOption = mw.libs.libSettings.DropdownOption;
@@ -636,7 +636,6 @@ if (
 	!mw.config.get( 'wgDiffOldId' ) &&
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
-	mw.loader.load( 'http://localhost/extensions-trunk/libSettings/modules/index.css', 'text/css' );
 	mw.loader.getScript( 'http://localhost/index.js' ).then( function () {
 		window.sdhmain();
 	} );
