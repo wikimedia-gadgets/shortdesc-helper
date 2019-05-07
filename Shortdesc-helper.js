@@ -63,7 +63,6 @@ window.sdhmain = function () {
 	/* Settings */
 	var CheckboxOption = mw.libs.libSettings.CheckboxOption;
 	var NumberOption = mw.libs.libSettings.NumberOption;
-	var DropdownOption = mw.libs.libSettings.DropdownOption;
 
 	var optionsConfig = [
 		{
