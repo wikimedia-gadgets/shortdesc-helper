@@ -91,8 +91,8 @@ window.sdhmain = function () {
 	var settings = new mw.libs.libSettings.Settings( {
 		scriptName: 'Shortdesc-helper',
 		helpInline: true,
-		/* size: 'medium',
-		height: 150,*/
+		size: 'medium',
+		height: 250,
 		optionsConfig: optionsConfig
 	} );
 
