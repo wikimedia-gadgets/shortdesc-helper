@@ -337,6 +337,7 @@ window.sdhmain = function () {
 					saveInput = function () {
 						saveButton.setDisabled( true );
 						cancelButton.setDisabled( true );
+						settingsButton.setDisabled( true );
 						descriptionInput.setDisabled( true );
 						addDescription( descriptionInput.getValue(), cancelButton );
 					};
