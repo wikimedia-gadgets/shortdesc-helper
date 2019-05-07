@@ -85,23 +85,6 @@ window.sdhmain = function () {
 					label: 'Allow additions of short descriptions to redirects',
 					help: 'When checked, redirects will have an "add" button to add a short description. (default off)',
 					defaultValue: false
-				} ),
-				new DropdownOption( {
-					name: 'SaveWikidata',
-					label: 'Save changes to Wikidata',
-					help: 'foooooo ',
-					defaultValue: 'add',
-					values: [
-						{ data: 'add', label: 'Only on additions (default)' },
-						{ data: 'all', label: 'On all changes' },
-						{ data: 'never', label: 'Never' }
-					]
-				} ),
-				new CheckboxOption( {
-					name: 'ClashFix',
-					label: 'Disable css used to prevent content jump.',
-					help: "You'd want to this if you have another script that clashes with this one, such as User:Yair_rand/WikidataInfo.js.",
-					defaultValue: false
 				} )
 			]
 		}
