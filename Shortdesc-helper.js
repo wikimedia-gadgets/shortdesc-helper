@@ -363,6 +363,7 @@ window.sdhmain = function () {
 
 					// Size the inputbox
 					$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' );
+					$( '#sdh-editbox' ).css( 'width', '100%' ); // Fix for Firefox so that element fills the max-width
 				} );
 			}
 		};
@@ -378,6 +379,8 @@ window.sdhmain = function () {
 		};
 
 		var appendDescription = function () {
+			// eslint-disable-next-line no-octal-escape
+			mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' ); // Undo padding by fix content jump css
 			// Add the main div
 			$( '#contentSub' ).append(
 				$( '<div>' )
