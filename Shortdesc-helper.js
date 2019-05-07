@@ -71,7 +71,6 @@ window.sdhmain = function () {
 				new NumberOption( {
 					name: 'InputWidth',
 					label: 'Width of editing input in em (default 35)',
-					helptip: 'worth a damn',
 					defaultValue: 35,
 					UIconfig: {
 						min: 10,
@@ -92,8 +91,8 @@ window.sdhmain = function () {
 	var settings = new mw.libs.libSettings.Settings( {
 		scriptName: 'Shortdesc-helper',
 		helpInline: true,
-		size: 'medium',
-		height: 350,
+		/* size: 'medium',
+		height: 150,*/
 		optionsConfig: optionsConfig
 	} );
 
