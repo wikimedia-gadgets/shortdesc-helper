@@ -190,7 +190,6 @@ window.sdhmain = function () {
  		 * If it is, return the short description as defined in the text
 		 */
 		var shortdescInText = function ( leadResult ) {
-			console.log( leadResult );
 			var lead = leadResult.query.pages[ 0 ].revisions[ 0 ].slots.main.content;
 			var match = lead && lead.match( pattern );
 			if ( match ) {
@@ -303,7 +302,7 @@ window.sdhmain = function () {
 				actionField.toggle();
 			} else {
 				mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
-					var length;
+					var length, saveInput;
 					// Define the input box and buttons.
 					var descriptionInput = new OO.ui.TextInputWidget( {
 						autocomplete: false,
@@ -354,7 +353,7 @@ window.sdhmain = function () {
 
 					};
 
-					var saveInput = function () {
+					saveInput = function () {
 						saveButton.setDisabled( true );
 						cancelButton.setDisabled( true );
 						descriptionInput.setDisabled( true );
@@ -389,9 +388,9 @@ window.sdhmain = function () {
 		var combineClickies = function ( clickyElements ) {
 			var clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 			if ( clickyElements ) {
-				for ( var x in clickyElements ) {
-					clickies.append( clickyElements[ x ] );
-				}
+				clickyElements.forEach( function ( element ) {
+					clickies.append( element );
+				} );
 				$description.append( clickies );
 			}
 		};
