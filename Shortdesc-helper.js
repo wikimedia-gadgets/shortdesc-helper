@@ -74,7 +74,7 @@ window.sdhmain = function () {
 					defaultValue: 35,
 					UIconfig: {
 						min: 10,
-						max: 400,
+						max: 999,
 						validate: /\d\d/
 					}
 				} ),
