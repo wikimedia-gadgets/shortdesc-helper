@@ -210,7 +210,7 @@ window.sdhmain = function () {
 					prependtext: prependText,
 					appendtext: appendText,
 					summary: summary
-				} ).done( function () {
+				} ).then( function () {
 					// Reload the page
 					window.location.reload();
 				} ).fail( function ( code, jqxhr ) {
