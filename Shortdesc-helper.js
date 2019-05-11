@@ -99,10 +99,9 @@ window.sdhmain = function () {
 	var options = settings.get();
 
 	/* Execute main code once the short description is gotten */
-	$.when( callPromiseDescription, $.ready ).then( function ( result ) {
+	$.when( callPromiseDescription ).then( function ( response ) {
 		var type, change, $description, infoPopup, actionField;
 
-		var response = result[ 0 ];
 		var pages = response.query.pages[ 0 ];
 		var pageDescription = pages.description;
 		var isLocal = ( pages.descriptionsource === 'local' );
@@ -406,9 +405,9 @@ window.sdhmain = function () {
 		 * Once clickyElements is generated, it is added to $description using combineClickies
 		 * and added to the main wrapping div, #sdh using appendDescription.
 		*/
-		$.when( callPromiseText ).then( function ( leadResult ) {
+		$.when( callPromiseText, $.ready ).then( function ( leadResult ) {
 			var clickyElements;
-			var output = shortdescInText( leadResult );
+			var output = shortdescInText( leadResult[ 0 ] );
 			var descriptionFromText = output[ 1 ];
 
 			$description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
