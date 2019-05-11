@@ -7,10 +7,11 @@
 	margin-top: -1.008em; /* 0.84 * 1.2em */
 }
 
+/* Fix layout for deleted mainspace pages */
 .skin-vector.ns-0 #contentSub2 {
 	margin-top: -1.2em;
 }
 
-.mw-warning-with-logexcerpt.mw-content-ltr {
+.skin-vector.ns-0 .mw-warning-with-logexcerpt.mw-content-ltr {
 	margin-bottom: 1.2em;
 }
