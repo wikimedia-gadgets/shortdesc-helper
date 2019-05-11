@@ -14,6 +14,7 @@
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ.
 */
 window.sdhmain = function () {
+	'use strict';
 	/* Grab config variables */
 	var title = mw.config.get( 'wgPageName' );
 	var namespace = mw.config.get( 'wgNamespaceNumber' );
