@@ -15,6 +15,10 @@
 */
 window.sdhmain = function () {
 	'use strict';
+	/* Consts */
+	var section;
+	var sdelement = '.shortdescription';
+
 	/* Grab config variables */
 	var title = mw.config.get( 'wgPageName' );
 	var namespace = mw.config.get( 'wgNamespaceNumber' );
@@ -29,6 +33,7 @@ window.sdhmain = function () {
 		canEdit &&
 		[ 10, 14, 710, 828, 2300, 2302 ].indexOf( namespace ) === -1
 	);
+
 	var API = new mw.Api( {
 		ajax: {
 			headers: {
@@ -44,14 +49,31 @@ window.sdhmain = function () {
 			prop: 'revisions',
 			titles: title,
 			rvprop: 'content',
-			rvsection: 0,
+			rvsection: section,
 			rvslots: 'main',
 			formatversion: 2
 		} );
 	};
 
-	// Get the lead section text
-	var callPromiseText = getText();
+	/* Download wikitext if it is a local description  */
+	var callPromiseText = ( function () {
+		var elements;
+		if ( $( sdelement ).length > 0 ) {
+		/* Find whether the short description is in the first section, to determine
+		** if we need to download the wikitext of the entire page.
+		** Do this by searching elements above the first heading for ".shortdescription" */
+			elements = $( '.mw-parser-output > h2' ).first().prevAll();
+			/* Need to check sibling elements with filter and their children
+			** with find to find short description. If length > 0 then found
+			** short description before the first heading, so get wikitext of section 0. */
+			if ( elements.filter( sdelement ).add( elements.find( sdelement ) ).length > 0 ) {
+				section = 0;
+			}
+
+			// Get the lead section text
+			return getText();
+		}
+	}() );
 
 	// Get the short description
 	var callPromiseDescription = API.get( {
@@ -204,7 +226,7 @@ window.sdhmain = function () {
 				);
 				API.postWithToken( 'csrf', {
 					action: 'edit',
-					section: 0,
+					section: section,
 					text: text,
 					title: title,
 					prependtext: prependText,
@@ -407,9 +429,12 @@ window.sdhmain = function () {
 		 * and added to the main wrapping div, #sdh using appendDescription.
 		*/
 		$.when( callPromiseText, $.ready ).then( function ( leadResult ) {
-			var clickyElements;
-			var output = shortdescInText( leadResult[ 0 ] );
-			var descriptionFromText = output[ 1 ];
+			var clickyElements, descriptionFromText;
+			if ( isLocal ) {
+				descriptionFromText = shortdescInText( leadResult[ 0 ] )[ 1 ];
+			} else {
+				descriptionFromText = false;
+			}
 
 			$description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
 
