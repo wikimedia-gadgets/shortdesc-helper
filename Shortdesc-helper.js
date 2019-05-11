@@ -401,7 +401,8 @@ window.sdhmain = function () {
 		};
 
 		var appendDescription = function () {
-			mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' ); // Undo padding by fix content jump css
+			// Undo padding used to fix content jump
+			mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
 			// Add the main div
 			$( '#contentSub' ).append(
 				$( '<div>' )
