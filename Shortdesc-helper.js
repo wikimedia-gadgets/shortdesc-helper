@@ -6,7 +6,7 @@
  * |_____________________________________________________________________________|
  *
  */
-/* Shortdesc helper: v3.3.1
+/* Shortdesc helper: v3.3.2
  * Documentation at [[User:Galobtter/Shortdesc helper]]
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
  * and easier editing of them by giving buttons and inputbox for doing so.
@@ -100,6 +100,11 @@ window.sdhmain = function () {
 						max: 999,
 						validate: /\d\d/
 					}
+				} ),
+				new CheckboxOption( {
+					name: 'MarkAsMinor',
+					label: 'Mark edits as minor',
+					defaultValue: false
 				} ),
 				new CheckboxOption( {
 					name: 'AddToRedirect',
@@ -231,7 +236,8 @@ window.sdhmain = function () {
 					title: title,
 					prependtext: prependText,
 					appendtext: appendText,
-					summary: summary
+					summary: summary,
+					minor: options.MarkAsMinor
 				} ).then( function () {
 					// Reload the page
 					window.location.reload();
