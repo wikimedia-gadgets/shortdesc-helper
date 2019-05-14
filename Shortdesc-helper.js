@@ -6,7 +6,7 @@
  * |_____________________________________________________________________________|
  *
  */
-/* Shortdesc helper: v3.3.2
+/* Shortdesc helper: v3.3.3
  * Documentation at [[User:Galobtter/Shortdesc helper]]
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
  * and easier editing of them by giving buttons and inputbox for doing so.
@@ -141,13 +141,24 @@ window.sdhmain = function () {
 		/* UI functions: Buttons */
 
 		/* Creates "clickies", simple link buttons. */
+		/* Things are made nice per https://stackoverflow.com/a/10510353 */
 		var Clicky = function ( descrip, text, func ) {
 			this.button = $( '<span>' )
 				.addClass( 'sdh-clicky' )
 				.append( $( '<a>' )
-					.attr( 'title', descrip )
+					.attr( {
+						title: descrip,
+						role: 'button',
+						tabindex: '0'
+					} )
 					.text( text )
 					.on( 'click', func )
+					.on( 'keydown', function ( e ) {
+						if ( [ 13, 32 ].indexOf( event.which ) !== -1 ) { // Space and enter
+							e.preventDefault();
+							return func();
+						}
+					} )
 				);
 		};
 
