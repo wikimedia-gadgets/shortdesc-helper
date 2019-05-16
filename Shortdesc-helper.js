@@ -89,7 +89,6 @@ window.sdhmain = function () {
 
 	var optionsConfig = [
 		{
-			title: 'Shortdesc-helper',
 			preferences: [
 				new NumberOption( {
 					name: 'InputWidth',
@@ -116,6 +115,7 @@ window.sdhmain = function () {
 	];
 
 	var settings = new mw.libs.libSettings.Settings( {
+		title: 'Settings for Shortdesc helper',
 		scriptName: 'Shortdesc-helper',
 		helpInline: true,
 		size: 'medium',
