@@ -97,8 +97,7 @@ window.sdhmain = function () {
 					defaultValue: 35,
 					UIconfig: {
 						min: 10,
-						max: 999,
-						validate: /\d\d/
+						max: 999
 					}
 				} ),
 				new CheckboxOption( {
