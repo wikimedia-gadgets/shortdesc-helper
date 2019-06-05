@@ -90,26 +90,45 @@ window.sdhmain = function () {
 	var optionsConfig = [
 		{
 			preferences: [
-				new NumberOption( {
-					name: 'InputWidth',
-					label: 'Width of editing input in em (default 35)',
-					defaultValue: 35,
-					UIconfig: {
-						min: 10,
-						max: 999
-					}
-				} ),
-				new CheckboxOption( {
-					name: 'MarkAsMinor',
-					label: 'Mark edits as minor',
-					defaultValue: false
-				} ),
-				new CheckboxOption( {
-					name: 'AddToRedirect',
-					label: 'Allow additions of short descriptions to redirects',
-					help: 'When checked, redirects will have an "add" button to add a short description. (default off)',
-					defaultValue: false
-				} )
+				{
+					header: 'General',
+					options: [
+						new CheckboxOption( {
+							name: 'MarkAsMinor',
+							label: 'Mark edits as minor',
+							defaultValue: false
+						} ),
+						new CheckboxOption( {
+							name: 'AddToRedirect',
+							label: 'Allow additions of short descriptions to redirects',
+							help: 'When checked, redirects will have an "add" button to add a short description. (default off)',
+							defaultValue: false
+						} )
+					]
+				},
+				{
+					header: 'Appearance',
+					options: [
+						new NumberOption( {
+							name: 'InputWidth',
+							label: 'Width of editing input in em (default 35)',
+							defaultValue: 35,
+							UIconfig: {
+								min: 10,
+								max: 999
+							}
+						} ),
+						new NumberOption( {
+							name: 'FontSize',
+							label: 'Font size, as a percentage (default 100%)',
+							defaultValue: 100,
+							UIconfig: {
+								min: 10,
+								max: 999
+							}
+						} )
+					]
+				}
 			]
 		}
 	];
@@ -119,11 +138,17 @@ window.sdhmain = function () {
 		scriptName: 'Shortdesc-helper',
 		helpInline: true,
 		size: 'medium',
-		height: 250,
+		height: 350,
 		optionsConfig: optionsConfig
 	} );
 
 	var options = settings.get();
+
+	/* Dynamic CSS based on options */
+	mw.util.addCSS(
+		'#sdh { font-size:' + options.FontSize + '%}' +
+		'#sdh-editbox, #sdh-inputbox { max-width:' + options.InputWidth + 'em };'
+	);
 
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription ).then( function ( response ) {
@@ -398,10 +423,6 @@ window.sdhmain = function () {
 					descriptionInput.on( 'enter', saveInput );
 
 					$( '#sdh' ).append( actionField.$element );
-
-					// Size the inputbox
-					$( '#sdh-editbox, #sdh-inputbox' ).css( 'max-width', options.InputWidth + 'em' );
-					$( '#sdh-editbox' ).css( 'width', '100%' ); // Fix for Firefox so that element fills the max-width
 				} );
 			}
 		};
@@ -423,10 +444,8 @@ window.sdhmain = function () {
 			$( '#contentSub' ).append(
 				$( '<div>' )
 					.prop( 'id', 'sdh' )
+					.append( $description )
 			);
-			if ( $description ) {
-				$( '#sdh' ).append( $description );
-			}
 		};
 
 		var updateSDH = function ( clickyElements ) {
