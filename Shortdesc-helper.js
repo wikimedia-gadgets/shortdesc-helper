@@ -26,6 +26,7 @@ window.sdhmain = function () {
 	var language = mw.config.get( 'wgContentLanguage' );
 	var canEdit = mw.config.get( 'wgIsProbablyEditable' );
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
+	var DBName = mw.config.get( 'wgDBname' );
 
 	/* Check if can edit the page, and disallow editing of templates and categories
 	 * to prevent accidental addition */
@@ -227,6 +228,17 @@ window.sdhmain = function () {
 			).button;
 
 			self.$element = self.infoClicky;
+		};
+
+		var setWikidataDescription = function ( newDescription, summary ) {
+			var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
+			return wikidataAPI.postWithToken( 'csrf', {
+				action: 'wbsetdescription',
+				id: wgQid,
+				language: language,
+				summary: summary,
+				value: newDescription
+			} );
 		};
 
 		/* Function to check if the short description is in the wikitext
