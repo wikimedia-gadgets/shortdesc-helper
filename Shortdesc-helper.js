@@ -26,9 +26,9 @@ window.sdhmain = function () {
 	var language = mw.config.get( 'wgContentLanguage' );
 	var canEdit = mw.config.get( 'wgIsProbablyEditable' );
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
-	var DBName = mw.config.get( 'wgDBname' );
+	/* var DBName = mw.config.get( 'wgDBname' );
 
-	var editWikidata = ( DBName !== 'enwiki' );
+	var editWikidata = ( DBName !== 'enwiki' );*/
 
 	var setWikidataDescription = function ( newDescription, summary ) {
 		var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
@@ -181,6 +181,11 @@ window.sdhmain = function () {
 		'#sdh-editbox, #sdh-inputbox { max-width:' + options.InputWidth + 'em };'
 	);
 
+	mw.messages.set( {
+		'sdh-wdAddDescription': 'Adding "$1" description ([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
+		'sdh-wdEditDescription': 'Editing "$1" description ([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])'
+	} );
+
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription ).then( function ( response ) {
 		var type, change, $description, infoPopup, actionField;
@@ -328,6 +333,13 @@ window.sdhmain = function () {
 			};
 
 			newDescription = newDescription.trim();
+
+			/* Make edits to Wikidata as appropiate */
+			if ( type === 'Adding' && [ 'add', 'all' ].indexOf( options.SaveWikidata ) !== -1 ) {
+				setWikidataDescription( newDescription, mw.msg( 'sdh-wdAddDescription', language ) );
+			} else if ( options.SaveWikidata === 'all' ) {
+				setWikidataDescription( newDescription, mw.msg( 'sdh-wdEditDescription', language ) );
+			}
 
 			// Capitalize first letter by default unless editing local description
 			if ( !isLocal ) {
