@@ -28,6 +28,19 @@ window.sdhmain = function () {
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
 	var DBName = mw.config.get( 'wgDBname' );
 
+	var editWikidata = ( DBName !== 'enwiki' );
+
+	var setWikidataDescription = function ( newDescription, summary ) {
+		var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
+		return wikidataAPI.postWithToken( 'csrf', {
+			action: 'wbsetdescription',
+			id: wgQid,
+			language: language,
+			summary: summary,
+			value: newDescription
+		} );
+	};
+
 	/* Check if can edit the page, and disallow editing of templates and categories
 	 * to prevent accidental addition */
 	var allowEditing = (
@@ -87,6 +100,7 @@ window.sdhmain = function () {
 	/* Settings */
 	var CheckboxOption = mw.libs.libSettings.CheckboxOption;
 	var NumberOption = mw.libs.libSettings.NumberOption;
+	var DropdownOption = mw.libs.libSettings.DropdownOption;
 
 	var optionsConfig = [
 		{
@@ -129,6 +143,22 @@ window.sdhmain = function () {
 							}
 						} )
 					]
+				},
+				{
+					header: 'Wikidata',
+					options: [
+						new DropdownOption( {
+							name: 'SaveWikidata',
+							label: 'Save changes to Wikidata',
+							help: 'You can choose whether to update the Wikidata description when using the script.',
+							defaultValue: 'add',
+							values: [
+								{ data: 'add', label: 'Only when no Wikidata description exists (default)' },
+								{ data: 'all', label: 'On all edits' },
+								{ data: 'never', label: 'Never' }
+							]
+						} )
+					]
 				}
 			]
 		}
@@ -139,7 +169,7 @@ window.sdhmain = function () {
 		scriptName: 'Shortdesc-helper',
 		helpInline: true,
 		size: 'medium',
-		height: 350,
+		height: 450,
 		optionsConfig: optionsConfig
 	} );
 
@@ -228,17 +258,6 @@ window.sdhmain = function () {
 			).button;
 
 			self.$element = self.infoClicky;
-		};
-
-		var setWikidataDescription = function ( newDescription, summary ) {
-			var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
-			return wikidataAPI.postWithToken( 'csrf', {
-				action: 'wbsetdescription',
-				id: wgQid,
-				language: language,
-				summary: summary,
-				value: newDescription
-			} );
 		};
 
 		/* Function to check if the short description is in the wikitext
