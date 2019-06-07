@@ -6,7 +6,7 @@
  * |_____________________________________________________________________________|
  *
  */
-/* Shortdesc helper: v3.3.3
+/* Shortdesc helper: v3.4.0
  * Documentation at [[User:Galobtter/Shortdesc helper]]
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
  * and easier editing of them by giving buttons and inputbox for doing so.
