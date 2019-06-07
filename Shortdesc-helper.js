@@ -110,13 +110,13 @@ window.sdhmain = function () {
 					options: [
 						new CheckboxOption( {
 							name: 'MarkAsMinor',
-							label: 'Mark edits as minor',
+							label: mw.msg( 'sdh-MarkAsMinor-label' ),
 							defaultValue: false
 						} ),
 						new CheckboxOption( {
 							name: 'AddToRedirect',
-							label: 'Allow additions of short descriptions to redirects',
-							help: 'When checked, redirects will have an "add" button to add a short description. (default off)',
+							label: mw.msg( 'sdh-AddToRedirect-label' ),
+							help: mw.msg( 'sdh-AddToRedirect-help' ),
 							defaultValue: false
 						} )
 					]
@@ -126,7 +126,7 @@ window.sdhmain = function () {
 					options: [
 						new NumberOption( {
 							name: 'InputWidth',
-							label: 'Width of editing input in em (default 35)',
+							label: mw.msg( 'sdh-InputWidth-label' ),
 							defaultValue: 35,
 							UIconfig: {
 								min: 10,
@@ -135,7 +135,7 @@ window.sdhmain = function () {
 						} ),
 						new NumberOption( {
 							name: 'FontSize',
-							label: 'Font size, as a percentage (default 100%)',
+							label: mw.msg( 'sdh-FontSize-label' ),
 							defaultValue: 100,
 							UIconfig: {
 								min: 10,
@@ -149,13 +149,13 @@ window.sdhmain = function () {
 					options: [
 						new DropdownOption( {
 							name: 'SaveWikidata',
-							label: 'Save changes to Wikidata',
-							help: 'You can choose whether to update the Wikidata description when using the script.',
+							label: mw.msg( 'sdh-SaveWikidata-label' ),
+							help: mw.msg( 'sdh-SaveWikidata-help' ),
 							defaultValue: 'add',
 							values: [
-								{ data: 'add', label: 'Only when no Wikidata description exists (default)' },
-								{ data: 'all', label: 'On all edits' },
-								{ data: 'never', label: 'Never' }
+								{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
+								{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
+								{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
 							]
 						} )
 					]
@@ -165,7 +165,7 @@ window.sdhmain = function () {
 	];
 
 	var settings = new mw.libs.libSettings.Settings( {
-		title: 'Settings for Shortdesc helper',
+		title: mw.msg( 'sdh-settingsDialog-title' ),
 		scriptName: 'Shortdesc-helper',
 		helpInline: true,
 		size: 'medium',
@@ -181,14 +181,9 @@ window.sdhmain = function () {
 		'#sdh-editbox, #sdh-inputbox { max-width:' + options.InputWidth + 'em };'
 	);
 
-	mw.messages.set( {
-		'sdh-wdAddDescription': 'Adding "$1" description ([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
-		'sdh-wdEditDescription': 'Editing "$1" description ([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])'
-	} );
-
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription ).then( function ( response ) {
-		var type, change, $description, infoPopup, actionField;
+		var type, change, $description, infoPopup, actionField, AddWikidata;
 
 		var pages = response.query.pages[ 0 ];
 		var pageDescription = pages.description;
@@ -240,8 +235,8 @@ window.sdhmain = function () {
 			self.text = text;
 
 			self.infoClicky = new Clicky(
-				'Click for info',
-				'?',
+				mw.msg( 'sdh-infoClicky-title' ),
+				mw.msg( 'sdh-infoClicky' ),
 				function () {
 					if ( !infoPopup ) {
 						mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
@@ -294,12 +289,7 @@ window.sdhmain = function () {
 			/* Appends, prepends, or replaces the lead section
 					 ** depending on which of text, prependText, and appendText exists. */
 			var makeEdit = function () {
-				var summary = (
-					type +
-					' [[Wikipedia:Short description|short description]]' +
-					changes +
-					' ([[User:Galobtter/Shortdesc helper|Shortdesc helper]])'
-				);
+				var summary = mw.message( 'sdh-summary', type, changes ).plain();
 				API.postWithToken( 'csrf', {
 					action: 'edit',
 					section: section,
@@ -335,10 +325,12 @@ window.sdhmain = function () {
 			newDescription = newDescription.trim();
 
 			/* Make edits to Wikidata as appropiate */
-			if ( type === 'Adding' && [ 'add', 'all' ].indexOf( options.SaveWikidata ) !== -1 ) {
-				setWikidataDescription( newDescription, mw.msg( 'sdh-wdAddDescription', language ) );
-			} else if ( options.SaveWikidata === 'all' ) {
-				setWikidataDescription( newDescription, mw.msg( 'sdh-wdEditDescription', language ) );
+			if (
+				wgQid &&
+				( options.SaveWikidata === 'all' || options.SaveWikidata === 'add' && AddWikidata ) &&
+				newDescription !== ''
+			) {
+				setWikidataDescription( newDescription, mw.message( 'sdh-wd-edit-description', language ).plain() );
 			}
 
 			// Capitalize first letter by default unless editing local description
@@ -364,7 +356,7 @@ window.sdhmain = function () {
 				}
 				makeEdit();
 			} else {
-				changes = ' from ' + quotify( pageDescription ) + ' to ' + quotify( newDescription );
+				changes = mw.message( 'sdh-changes', quotify( pageDescription ), quotify( newDescription ) ).plain();
 
 				/* Get the lead section text again right before making the edit
 				 ** to avoid issues with edit conflicts, and make the edit. */
@@ -372,7 +364,7 @@ window.sdhmain = function () {
 					if ( !replaceAndEdit( result ) ) {
 						cancelButton.setDisabled( false );
 						mw.notify(
-							'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.',
+							mw.msg( 'sdh-edit-failed' ),
 							{ autoHide: false }
 						);
 					}
@@ -401,8 +393,8 @@ window.sdhmain = function () {
 					} );
 
 					var saveButton = new OOuiClicky(
-						'Save description',
-						'Save',
+						mw.msg( 'sdh-save-title' ),
+						mw.msg( 'sdh-save' ),
 						function () {
 							saveInput();
 						},
@@ -410,8 +402,8 @@ window.sdhmain = function () {
 					).button;
 
 					var cancelButton = new OOuiClicky(
-						'Cancel editing',
-						'Cancel',
+						mw.msg( 'sdh-cancel-title' ),
+						mw.msg( 'sdh-cancel' ),
 						function () {
 							actionField.toggle();
 							$( '#sdh-showdescrip' ).show( 0 );
@@ -422,7 +414,7 @@ window.sdhmain = function () {
 					var settingsButton = new OO.ui.ButtonWidget( {
 						icon: 'settings',
 						framed: false,
-						title: 'Settings',
+						title: mw.msg( 'sdh-settings-title' ),
 						flags: [ 'safe' ],
 						classes: [ 'sdh-ooui-clicky' ]
 					} ).on( 'click', function () {
@@ -522,7 +514,7 @@ window.sdhmain = function () {
 			if ( descriptionFromText && ( descriptionFromText === 'none' ) ) {
 				$description.append(
 					$( '<span>' )
-						.text( 'This page has deliberately no description.' )
+						.text( mw.msg( 'sdh-no-description' ) )
 				);
 
 				clickyElements = [
@@ -536,8 +528,7 @@ window.sdhmain = function () {
 							textInput();
 						}
 					).button,
-					new InfoClickyPopup(
-						'A page is deliberately set to have an empty short description using the code {{Shor​t description|none}}. Note, however, that for now the Wikidata short description is actually still shown if available.'
+					new InfoClickyPopup( mw.msg( 'sdh-no-description-popup' )
 					).$element
 				];
 
@@ -579,15 +570,15 @@ window.sdhmain = function () {
 						} else {
 							clickyElements = [
 								new Clicky(
-									'Override current short description',
-									'Override',
+									mw.msg( 'sdh-override-title' ),
+									mw.msg( 'sdh-override' ),
 									function () {
 										type = 'Adding custom';
 										textInput();
 									}
 								).button,
 								new InfoClickyPopup(
-									'<p>While this description can be overridden with another local short description, it cannot be directly edited. This is most likely because it is automatically generated by the article\'s infobox or some other template. See <a href = "/wiki/Wikipedia:WikiProject_Short_descriptions#Auto-generated_and_bot_generated_Descriptions"> this page</a> for more info.</p>'
+									mw.msg( 'sdh-override-popup' )
 								).$element
 							];
 						}
@@ -645,10 +636,7 @@ window.sdhmain = function () {
 						.append(
 							$( '<span>' )
 								.addClass( 'sdh-missing-description' )
-								.text( 'Missing ' ),
-							$( '<a>' )
-								.attr( 'href', '/wiki/Wikipedia:Short description' )
-								.text( ( isRedirect ? 'redirect' : 'article' ) + ' description' )
+								.html( mw.msg( 'sdh-missing-description', ( isRedirect ? 'redirect' : 'article' ) ) )
 						)
 				);
 
@@ -659,6 +647,7 @@ window.sdhmain = function () {
 							'Add',
 							function () {
 								type = 'Adding';
+								AddWikidata = true;
 								textInput();
 							}
 						).button
@@ -677,5 +666,41 @@ if (
 	!mw.config.get( 'wgDiffOldId' ) &&
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
+	mw.messages.set( {
+		/* Settings messages */
+		'sdh-settingsDialog-title': 'Settings for Shortdesc helper',
+		'sdh-MarkAsMinor-label': 'Mark edits as minor',
+		'sdh-AddToRedirect-label': 'Allow additions of short descriptions to redirects',
+		'sdh-AddToRedirect-help': 'When checked, redirects will have an "add" button to add a short description. (default off)',
+		'sdh-InputWidth-label': 'Width of editing input in em (default 35)',
+		'sdh-FontSize-label': 'Font size, as a percentage (default 100%)',
+		'sdh-SaveWikidata-label': 'Save changes to Wikidata',
+		'sdh-SaveWikidata-help': 'You can choose whether to update the Wikidata description when using the script.',
+		'sdh-SaveWikidata-add-label': 'Only when no Wikidata description exists (default)',
+		'sdh-SaveWikidata-all-label': 'On all edits',
+		'sdh-SaveWikidata-never-label': 'Never',
+		/* Initial view messages */
+		'sdh-infoClicky': '?',
+		'sdh-infoClicky-title': 'Click for info',
+		'sdh-no-description': 'This page has deliberately no description.',
+		'sdh-no-description-popup': 'A page is deliberately set to have an empty short description using the code {{Shor​t description|none}}. Note, however, that for now the Wikidata short description is actually still shown if available.',
+		'sdh-missing-description': 'Missing <a href="/wiki/Wikipedia:Short description">$1 description</a>',
+		'sdh-override': 'Override',
+		'sdh-override-title': 'Override current short description',
+		'sdh-override-popup': '<p>While this description can be overridden with another local short description, it cannot be directly edited. This is most likely because it is automatically generated by the article\'s infobox or some other template. See <a href = "/wiki/Wikipedia:WikiProject_Short_descriptions#Auto-generated_and_bot_generated_Descriptions"> this page</a> for more info.</p>',
+		/* Editing messsages */
+		'sdh-save': 'Save',
+		'sdh-save-title': 'Save description',
+		'sdh-cancel': 'Cancel',
+		'sdh-cancel-title': 'Cancel editing',
+		'sdh-settings-title': 'Settings',
+		/* Summary messages */
+		'sdh-changes': 'from $1 to $2',
+		'sdh-summary': '$1 [[Wikipedia:Short description|short description]] $2 ([[User:Galobtter/Shortdesc helper|Shortdesc helper]])',
+		/* Wikidata summary messages */
+		'sdh-wd-edit-description': '([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
+		/* Failure message */
+		'sdh-edit-failed': 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.'
+	} );
 	window.sdhmain();
 }
