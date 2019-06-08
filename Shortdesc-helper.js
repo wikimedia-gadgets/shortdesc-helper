@@ -183,7 +183,7 @@ window.sdhmain = function () {
 
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription ).then( function ( response ) {
-		var type, change, $description, infoPopup, actionField, AddWikidata;
+		var summaryMsg, change, $description, infoPopup, actionField, AddWikidata;
 
 		var pages = response.query.pages[ 0 ];
 		var pageDescription = pages.description;
@@ -274,7 +274,7 @@ window.sdhmain = function () {
 
 		/* This function adds or replaces short descriptions. */
 		var addDescription = function ( newDescription, cancelButton ) {
-			var changes, replacement, prependText, appendText, text;
+			var replacement, prependText, appendText, text;
 
 			// Helper function to add quotes around text
 			var quotify = function ( text ) {
@@ -286,9 +286,14 @@ window.sdhmain = function () {
 			};
 
 			/* Appends, prepends, or replaces the lead section
-					 ** depending on which of text, prependText, and appendText exists. */
+			** depending on which of text, prependText, and appendText exists. */
 			var makeEdit = function () {
-				var summary = mw.message( 'sdh-summary', type, changes ).plain();
+				var summary = mw.message(
+					summaryMsg,
+					quotify( pageDescription ),
+					quotify( newDescription )
+				).plain() +
+				mw.message( 'sdh-summary-append' ).plain();
 				API.postWithToken( 'csrf', {
 					action: 'edit',
 					section: section,
@@ -329,7 +334,7 @@ window.sdhmain = function () {
 				( options.SaveWikidata === 'all' || options.SaveWikidata === 'add' && AddWikidata ) &&
 				newDescription !== ''
 			) {
-				setWikidataDescription( newDescription, mw.message( 'sdh-wd-edit-description', language ).plain() );
+				setWikidataDescription( newDescription, mw.message( 'sdh-wd-summary', language ).plain() );
 			}
 
 			// Capitalize first letter by default unless editing local description
@@ -347,7 +352,6 @@ window.sdhmain = function () {
 
 			// var change is defined by the button that was clicked
 			if ( !change ) {
-				changes = ': ' + quotify( newDescription );
 				if ( isRedirect ) {
 					appendText = '\n' + replacement;
 				} else {
@@ -355,8 +359,6 @@ window.sdhmain = function () {
 				}
 				makeEdit();
 			} else {
-				changes = mw.message( 'sdh-changes', quotify( pageDescription ), quotify( newDescription ) ).plain();
-
 				/* Get the lead section text again right before making the edit
 				 ** to avoid issues with edit conflicts, and make the edit. */
 				$.when( getText() ).then( function ( result ) {
@@ -518,13 +520,14 @@ window.sdhmain = function () {
 					new Clicky(
 						'sdh-add',
 						function () {
-							type = 'Changing';
+							summaryMsg = 'sdh-summary-changing';
 							change = true;
 							pageDescription = '';
 							textInput();
 						}
 					).button,
-					new InfoClickyPopup( mw.msg( 'sdh-no-description-popup' )
+					new InfoClickyPopup(
+						mw.msg( 'sdh-no-description-popup' )
 					).$element
 				];
 
@@ -545,7 +548,7 @@ window.sdhmain = function () {
 						.append( $( '<a>' )
 							.attr( 'href', 'https://www.wikidata.org/wiki/Special:SetLabelDescriptionAliases/' + wgQid + '/' + language )
 							.addClass( 'sdh-wikidata-description' )
-							.text( 'Wikidata' )
+							.text( mw.msg( 'sdh-wikidata-link-label' ) )
 						) ];
 				}
 
@@ -556,7 +559,7 @@ window.sdhmain = function () {
 								new Clicky(
 									'sdh-edit',
 									function () {
-										type = 'Changing';
+										summaryMsg = 'sdh-summary-changing';
 										change = true;
 										textInput();
 									}
@@ -567,7 +570,7 @@ window.sdhmain = function () {
 								new Clicky(
 									'sdh-override',
 									function () {
-										type = 'Adding custom';
+										summaryMsg = 'sdh-summary-adding-custom';
 										textInput();
 									}
 								).button,
@@ -602,14 +605,14 @@ window.sdhmain = function () {
 										);
 									}
 
-									type = 'Importing Wikidata';
+									summaryMsg = 'sdh-summary-importing-wikidata';
 									addDescription( pageDescription );
 								}
 							).button,
 							new Clicky(
 								'sdh-editimport',
 								function () {
-									type = 'Adding local';
+									summaryMsg = 'sdh-summary-adding-local';
 									textInput();
 								}
 							).button
@@ -637,7 +640,7 @@ window.sdhmain = function () {
 						new Clicky(
 							'sdh-add',
 							function () {
-								type = 'Adding';
+								summaryMsg = 'sdh-summary-adding';
 								AddWikidata = true;
 								textInput();
 							}
@@ -674,6 +677,7 @@ if (
 		'sdh-SaveWikidata-all-label': 'On all edits',
 		'sdh-SaveWikidata-never-label': 'Never',
 		/* Initial view messages */
+		'sdh-wikidata-link-label': 'Wikidata',
 		'sdh-no-description': 'This page has deliberately no description.',
 		'sdh-missing-description': 'Missing <a href="/wiki/Wikipedia:Short description">$1 description</a>',
 		/* Initial view buttons */
@@ -699,10 +703,14 @@ if (
 		'sdh-cancel-title': 'Cancel editing',
 		'sdh-settings-title': 'Settings',
 		/* Summary messages */
-		'sdh-changes': 'from $1 to $2',
-		'sdh-summary': '$1 [[Wikipedia:Short description|short description]] $2 ([[User:Galobtter/Shortdesc helper|Shortdesc helper]])',
+		'sdh-summary-append': ' ([[User:Galobtter/Shortdesc helper|Shortdesc helper]])',
+		'sdh-summary-changing': 'Changing [[Wikipedia:Short description|short description]] from $1 to $2',
+		'sdh-summary-adding-custom': 'Adding custom [[Wikipedia:Short description|short description]]: $2',
+		'sdh-summary-importing-wikidata': 'Importing Wikidata [[Wikipedia:Short description|short description]]: $2',
+		'sdh-summary-adding-local': 'Adding local [[Wikipedia:Short description|short description]]: $2',
+		'sdh-summary-adding': 'Adding [Wikipedia:Short description|short description]]: $2',
 		/* Wikidata summary messages */
-		'sdh-wd-edit-description': '([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
+		'sdh-wd-summary': '([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
 		/* Failure message */
 		'sdh-edit-failed': 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.',
 		'sdh-wd-edit-failed': 'Editing wikidata failed.' // Used on other wikis
