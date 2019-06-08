@@ -712,7 +712,7 @@ if (
 		'sdh-summary-adding-local': 'Adding local [[Wikipedia:Short description|short description]]: $2',
 		'sdh-summary-adding': 'Adding [Wikipedia:Short description|short description]]: $2',
 		/* Wikidata summary messages */
-		'sdh-wd-summary': '([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
+		'sdh-wd-summary': '([[w:en:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
 		/* Failure message */
 		'sdh-edit-failed': 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.',
 		'sdh-wd-edit-failed': 'Editing wikidata failed.' // Used on other wikis
