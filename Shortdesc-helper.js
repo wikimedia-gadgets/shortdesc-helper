@@ -26,9 +26,9 @@ window.sdhmain = function () {
 	var language = mw.config.get( 'wgContentLanguage' );
 	var canEdit = mw.config.get( 'wgIsProbablyEditable' );
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
-	/* var DBName = mw.config.get( 'wgDBname' );
+	var DBName = mw.config.get( 'wgDBname' );
 
-	var editWikidata = ( DBName !== 'enwiki' );*/
+	var onlyEditWikidata = ( DBName !== 'enwiki' );
 
 	var setWikidataDescription = function ( newDescription, summary ) {
 		var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
@@ -111,7 +111,8 @@ window.sdhmain = function () {
 						new CheckboxOption( {
 							name: 'MarkAsMinor',
 							label: mw.msg( 'sdh-MarkAsMinor-label' ),
-							defaultValue: false
+							defaultValue: false,
+							hide: onlyEditWikidata
 						} ),
 						new CheckboxOption( {
 							name: 'AddToRedirect',
@@ -146,6 +147,7 @@ window.sdhmain = function () {
 				},
 				{
 					header: mw.msg( 'sdh-header-Wikidata' ),
+					hide: onlyEditWikidata,
 					options: [
 						new DropdownOption( {
 							name: 'SaveWikidata',
@@ -169,7 +171,7 @@ window.sdhmain = function () {
 		scriptName: 'Shortdesc-helper',
 		helpInline: true,
 		size: 'medium',
-		height: 450,
+		height: onlyEditWikidata ? 300 : 450,
 		optionsConfig: optionsConfig
 	} );
 
