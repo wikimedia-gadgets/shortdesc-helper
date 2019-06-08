@@ -106,7 +106,7 @@ window.sdhmain = function () {
 		{
 			preferences: [
 				{
-					header: 'General',
+					header: mw.msg( 'sdh-header-general' ),
 					options: [
 						new CheckboxOption( {
 							name: 'MarkAsMinor',
@@ -122,7 +122,7 @@ window.sdhmain = function () {
 					]
 				},
 				{
-					header: 'Appearance',
+					header: mw.msg( 'sdh-header-appearance' ),
 					options: [
 						new NumberOption( {
 							name: 'InputWidth',
@@ -145,7 +145,7 @@ window.sdhmain = function () {
 					]
 				},
 				{
-					header: 'Wikidata',
+					header: mw.msg( 'sdh-header-Wikidata' ),
 					options: [
 						new DropdownOption( {
 							name: 'SaveWikidata',
@@ -197,16 +197,16 @@ window.sdhmain = function () {
 
 		/* Creates "clickies", simple link buttons. */
 		/* Things are made nice per https://stackoverflow.com/a/10510353 */
-		var Clicky = function ( descrip, text, func ) {
+		var Clicky = function ( msgName, func ) {
 			this.button = $( '<span>' )
 				.addClass( 'sdh-clicky' )
 				.append( $( '<a>' )
 					.attr( {
-						title: descrip,
+						title: mw.msg( msgName + '-title' ),
 						role: 'button',
 						tabindex: '0'
 					} )
-					.text( text )
+					.text( mw.msg( msgName + '-label' ) )
 					.on( 'click', func )
 					.on( 'keydown', function ( e ) {
 						if ( [ 13, 32 ].indexOf( event.which ) !== -1 ) { // Space and enter
@@ -218,11 +218,11 @@ window.sdhmain = function () {
 		};
 
 		/* Creates OOui buttons, which are used for save and cancel. */
-		var OOuiClicky = function ( descrip, text, func, flags, icon ) {
+		var OOuiClicky = function ( msgName, func, flags, icon ) {
 			this.button = new OO.ui.ButtonWidget( {
-				label: text,
+				label: mw.msg( msgName + '-label' ),
 				icon: icon,
-				title: descrip,
+				title: mw.msg( msgName + '-title' ),
 				flags: flags,
 				classes: [ 'sdh-ooui-clicky' ]
 			} );
@@ -235,8 +235,7 @@ window.sdhmain = function () {
 			self.text = text;
 
 			self.infoClicky = new Clicky(
-				mw.msg( 'sdh-infoClicky-title' ),
-				mw.msg( 'sdh-infoClicky' ),
+				'sdh-infoClicky',
 				function () {
 					if ( !infoPopup ) {
 						mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
@@ -393,8 +392,7 @@ window.sdhmain = function () {
 					} );
 
 					var saveButton = new OOuiClicky(
-						mw.msg( 'sdh-save-title' ),
-						mw.msg( 'sdh-save' ),
+						'sdh-save',
 						function () {
 							saveInput();
 						},
@@ -402,8 +400,7 @@ window.sdhmain = function () {
 					).button;
 
 					var cancelButton = new OOuiClicky(
-						mw.msg( 'sdh-cancel-title' ),
-						mw.msg( 'sdh-cancel' ),
+						'sdh-cancel',
 						function () {
 							actionField.toggle();
 							$( '#sdh-showdescrip' ).show( 0 );
@@ -519,8 +516,7 @@ window.sdhmain = function () {
 
 				clickyElements = [
 					new Clicky(
-						'Add short description',
-						'Add',
+						'sdh-add',
 						function () {
 							type = 'Changing';
 							change = true;
@@ -558,8 +554,7 @@ window.sdhmain = function () {
 						if ( descriptionFromText ) {
 							clickyElements = [
 								new Clicky(
-									'Edit short description',
-									'Edit',
+									'sdh-edit',
 									function () {
 										type = 'Changing';
 										change = true;
@@ -570,8 +565,7 @@ window.sdhmain = function () {
 						} else {
 							clickyElements = [
 								new Clicky(
-									mw.msg( 'sdh-override-title' ),
-									mw.msg( 'sdh-override' ),
+									'sdh-override',
 									function () {
 										type = 'Adding custom';
 										textInput();
@@ -585,8 +579,7 @@ window.sdhmain = function () {
 					} else {
 						clickyElements.push(
 							new Clicky(
-								'Import description from Wikidata',
-								'Import',
+								'sdh-import',
 								function () {
 									var x;
 									// Disable all clicky buttons
@@ -614,8 +607,7 @@ window.sdhmain = function () {
 								}
 							).button,
 							new Clicky(
-								'Edit and import description from Wikidata',
-								'Edit and Import',
+								'sdh-editimport',
 								function () {
 									type = 'Adding local';
 									textInput();
@@ -643,8 +635,7 @@ window.sdhmain = function () {
 				if ( allowEditing ) {
 					clickyElements = [
 						new Clicky(
-							'Add description',
-							'Add',
+							'sdh-add',
 							function () {
 								type = 'Adding';
 								AddWikidata = true;
@@ -669,6 +660,9 @@ if (
 	mw.messages.set( {
 		/* Settings messages */
 		'sdh-settingsDialog-title': 'Settings for Shortdesc helper',
+		'sdh-header-general': 'General',
+		'sdh-header-appearance': 'Appearance',
+		'sdh-header-Wikidata': 'Wikidata',
 		'sdh-MarkAsMinor-label': 'Mark edits as minor',
 		'sdh-AddToRedirect-label': 'Allow additions of short descriptions to redirects',
 		'sdh-AddToRedirect-help': 'When checked, redirects will have an "add" button to add a short description. (default off)',
@@ -680,18 +674,28 @@ if (
 		'sdh-SaveWikidata-all-label': 'On all edits',
 		'sdh-SaveWikidata-never-label': 'Never',
 		/* Initial view messages */
-		'sdh-infoClicky': '?',
-		'sdh-infoClicky-title': 'Click for info',
 		'sdh-no-description': 'This page has deliberately no description.',
-		'sdh-no-description-popup': 'A page is deliberately set to have an empty short description using the code {{Shor​t description|none}}. Note, however, that for now the Wikidata short description is actually still shown if available.',
 		'sdh-missing-description': 'Missing <a href="/wiki/Wikipedia:Short description">$1 description</a>',
-		'sdh-override': 'Override',
+		/* Initial view buttons */
+		'sdh-infoClicky-label': '?',
+		'sdh-infoClicky-title': 'Click for info',
+		'sdh-add-label': 'Add',
+		'sdh-add-title': 'Add short description',
+		'sdh-edit-label': 'Edit',
+		'sdh-edit-title': 'Edit short description',
+		'sdh-override-label': 'Override',
 		'sdh-override-title': 'Override current short description',
+		'sdh-import-label': 'Import',
+		'sdh-import-title': 'Import description from Wikidata',
+		'sdh-editimport-label': 'Edit and import',
+		'sdh-editimport-title': 'Edit and import description from Wikidata',
+		/* Popup text*/
+		'sdh-no-description-popup': 'A page is deliberately set to have an empty short description using the code {{Shor​t description|none}}. Note, however, that for now the Wikidata short description is actually still shown if available.',
 		'sdh-override-popup': '<p>While this description can be overridden with another local short description, it cannot be directly edited. This is most likely because it is automatically generated by the article\'s infobox or some other template. See <a href = "/wiki/Wikipedia:WikiProject_Short_descriptions#Auto-generated_and_bot_generated_Descriptions"> this page</a> for more info.</p>',
 		/* Editing messsages */
-		'sdh-save': 'Save',
+		'sdh-save-label': 'Save',
 		'sdh-save-title': 'Save description',
-		'sdh-cancel': 'Cancel',
+		'sdh-cancel-label': 'Cancel',
 		'sdh-cancel-title': 'Cancel editing',
 		'sdh-settings-title': 'Settings',
 		/* Summary messages */
@@ -700,7 +704,8 @@ if (
 		/* Wikidata summary messages */
 		'sdh-wd-edit-description': '([[w:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
 		/* Failure message */
-		'sdh-edit-failed': 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.'
+		'sdh-edit-failed': 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.',
+		'sdh-wd-edit-failed': 'Editing wikidata failed.' // Used on other wikis
 	} );
 	window.sdhmain();
 }
