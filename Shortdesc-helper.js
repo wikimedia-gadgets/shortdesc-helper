@@ -127,22 +127,26 @@ window.sdh.main = function () {
 		onlyEditWikidata
 	);
 
-	var API = new mw.Api( {
+	var APIoptions = {
 		ajax: {
 			headers: {
 				'Api-User-Agent': 'Short description editer/viewer (User:Galobtter/Shortdesc helper)'
 			}
 		}
-	} );
+	};
+
+	var API = new mw.Api( APIoptions );
 
 	var setWikidataDescription = function ( newDescription ) {
-		var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
-		return wikidataAPI.postWithToken( 'csrf', {
-			action: 'wbsetdescription',
-			id: wgQid,
-			language: language,
-			summary: mw.message( 'sdh-wd-summary', language ).plain(),
-			value: newDescription
+		return mw.loader.using( 'mediawiki.ForeignApi' ).then( function () {
+			var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php', APIoptions );
+			return wikidataAPI.postWithToken( 'csrf', {
+				action: 'wbsetdescription',
+				id: wgQid,
+				language: language,
+				summary: mw.message( 'sdh-wd-summary', language ).plain(),
+				value: newDescription
+			} );
 		} );
 	};
 
@@ -616,7 +620,7 @@ window.sdh.main = function () {
 		 * depending on various factors, such as:
 		 * Whether the description exists
 		 * Whether the description is on wikidata or not
-		 * Whether the page is in mainspace.
+		 * Whether the page is in mainspace
 		 * Show the relevant buttons ("clickies"), which are stored as a list in clickyElements
 		 * $description stores the html generated.
 		 * Once clickyElements is generated, it is added to $description using combineClickies
