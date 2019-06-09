@@ -44,7 +44,8 @@ window.sdh.initMessages = function () {
 		'sdh-settings-title': 'Settings',
 		/* Wikidata summary messages */
 		'sdh-wd-summary': '([[w:en:User:Galobtter/Shortdesc helper|Shortdesc helper]])',
-		'sdh-wd-edit-failed': 'Saving the edit to Wikidata failed.'
+		'sdh-wd-edit-failed': 'Saving the edit to Wikidata failed.',
+		'sdh-wd-edit-failed-prefix': '\n\nThe info given by Wikidata is that:\n\n'
 	};
 
 	/* These messages don't need translation as they are only used on enwiki
@@ -107,6 +108,13 @@ window.sdh.main = function () {
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
 	// var DBName = mw.config.get( 'wgDBname' );
 
+	/* onlyEditWikidata is a site-wide flag.
+	** If it is true, then the only descriptions for the wiki are assumed to be on Wikidata.
+	** If it is false, then that means descriptions can also be added through {{SHORTDESC:}}
+	** (currently, this is only the case on enwiki).
+	** This flag modifies the behaviour of various methods to display the appropriate buttons and
+	** settings, and makes that the description is saved in the right place.
+	*/
 	var onlyEditWikidata = true; // ( DBName !== 'enwiki' );
 
 	/* Check if can edit the page, and disallow editing of templates and categories
@@ -359,11 +367,14 @@ window.sdh.main = function () {
 		};
 
 		// Notify the user that the edit failed and log any debug info
-		var editFailed = function ( msgName, cancelButton, debug ) {
+		var editFailed = function ( msgName, cancelButton, debug, extraMsg ) {
+			var message = mw.msg( msgName ) + extraMsg;
 			cancelButton.setDisabled( false );
 			mw.notify(
-				mw.msg( msgName ),
-				{ autoHide: false }
+				message,
+				{
+					autoHide: false
+				}
 			);
 			if ( debug ) {
 				mw.log.warn( debug );
@@ -374,8 +385,16 @@ window.sdh.main = function () {
 		var editWikidataDescription = function ( newDescription, cancelButton ) {
 			setWikidataDescription( newDescription ).then( function () {
 				window.location.reload();
-			}, function ( code, jqxhr ) {
-				editFailed( 'sdh-wd-edit-failed', cancelButton, [ code, jqxhr ] );
+			}, function () {
+				editFailed(
+					'sdh-wd-edit-failed',
+					cancelButton,
+					arguments,
+					arguments[ 1 ].error.info ? (
+						mw.msg( 'sdh-wd-edit-failed-prefix' ) +
+						arguments[ 1 ].error.info
+					) : ''
+				);
 			} );
 		};
 
@@ -413,8 +432,8 @@ window.sdh.main = function () {
 				} ).then( function () {
 					// Reload the page
 					window.location.reload();
-				} ).fail( function ( code, jqxhr ) {
-					editFailed( 'sdh-edit-failed', cancelButton, [ code, jqxhr ] );
+				} ).fail( function () {
+					editFailed( 'sdh-edit-failed', cancelButton, arguments );
 				} );
 			};
 
@@ -529,9 +548,9 @@ window.sdh.main = function () {
 					var updateOnChange = function () {
 						length = descriptionInput.getInputLength();
 						descriptionInput.setLabel( String( length ) );
-
 					};
 
+					// This is bound to the save button
 					saveInput = function () {
 						var description = descriptionInput.getValue().trim();
 						saveButton.setDisabled( true );
@@ -593,8 +612,7 @@ window.sdh.main = function () {
 			appendDescription();
 		};
 
-		/* Main code
-		 * Shows the short description and
+		/* This code creates the initial display - showing the short description and
 		 * depending on various factors, such as:
 		 * Whether the description exists
 		 * Whether the description is on wikidata or not
