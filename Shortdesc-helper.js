@@ -106,7 +106,7 @@ window.sdh.main = function () {
 	var language = mw.config.get( 'wgContentLanguage' );
 	var canEdit = mw.config.get( 'wgIsProbablyEditable' );
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
-	// var DBName = mw.config.get( 'wgDBname' );
+	var DBName = mw.config.get( 'wgDBname' );
 
 	/* onlyEditWikidata is a site-wide flag.
 	** If it is true, then the only descriptions for the wiki are assumed to be on Wikidata.
@@ -115,7 +115,7 @@ window.sdh.main = function () {
 	** This flag modifies the behaviour of various methods to display the appropriate buttons and
 	** settings, and makes that the description is saved in the right place.
 	*/
-	var onlyEditWikidata = true; // ( DBName !== 'enwiki' );
+	var onlyEditWikidata = ( DBName !== 'enwiki' );
 
 	/* Check if can edit the page, and disallow editing of templates and categories
 	 * to prevent accidental addition */
