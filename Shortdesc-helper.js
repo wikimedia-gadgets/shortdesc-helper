@@ -13,7 +13,7 @@
  * and easier editing of them by giving buttons and inputbox for doing so.
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ.
 */
-window.sdh = {};
+window.sdh = window.sdh || {};
 
 /* Set messages using mw.message.
 ** window.sdh.messages can be used to override these messages (for e.g translations).
@@ -193,85 +193,99 @@ window.sdh.main = function () {
 		formatversion: 2
 	} );
 
-	/* Settings */
-	var CheckboxOption = mw.libs.libSettings.CheckboxOption;
-	var NumberOption = mw.libs.libSettings.NumberOption;
-	var DropdownOption = mw.libs.libSettings.DropdownOption;
+	/* Load settings using libSettings if it exists
+	** Otherwise gracefully fallback to defaults. */
+	var usinglibSettings = !!mw.libs.libSettings;
+	var CheckboxOption, NumberOption, DropdownOption, optionsConfig, settings, options;
 
-	var optionsConfig = [
-		{
-			preferences: [
-				{
-					header: mw.msg( 'sdh-header-general' ),
-					options: [
-						new CheckboxOption( {
-							name: 'MarkAsMinor',
-							label: mw.msg( 'sdh-MarkAsMinor-label' ),
-							defaultValue: false,
-							hide: onlyEditWikidata
-						} ),
-						new CheckboxOption( {
-							name: 'AddToRedirect',
-							label: mw.msg( 'sdh-AddToRedirect-label' ),
-							help: mw.msg( 'sdh-AddToRedirect-help' ),
-							defaultValue: false
-						} )
-					]
-				},
-				{
-					header: mw.msg( 'sdh-header-appearance' ),
-					options: [
-						new NumberOption( {
-							name: 'InputWidth',
-							label: mw.msg( 'sdh-InputWidth-label' ),
-							defaultValue: 35,
-							UIconfig: {
-								min: 10,
-								max: 999
-							}
-						} ),
-						new NumberOption( {
-							name: 'FontSize',
-							label: mw.msg( 'sdh-FontSize-label' ),
-							defaultValue: 100,
-							UIconfig: {
-								min: 10,
-								max: 999
-							}
-						} )
-					]
-				},
-				{
-					header: mw.msg( 'sdh-header-Wikidata' ),
-					hide: onlyEditWikidata,
-					options: [
-						new DropdownOption( {
-							name: 'SaveWikidata',
-							label: mw.msg( 'sdh-SaveWikidata-label' ),
-							help: mw.msg( 'sdh-SaveWikidata-help' ),
-							defaultValue: 'add',
-							values: [
-								{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
-								{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
-								{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
-							]
-						} )
-					]
-				}
-			]
-		}
-	];
+	if ( usinglibSettings ) {
+		CheckboxOption = mw.libs.libSettings.CheckboxOption;
+		NumberOption = mw.libs.libSettings.NumberOption;
+		DropdownOption = mw.libs.libSettings.DropdownOption;
 
-	var settings = new mw.libs.libSettings.Settings( {
-		title: mw.msg( 'sdh-settingsDialog-title' ),
-		scriptName: 'Shortdesc-helper',
-		helpInline: true,
-		size: 'medium',
-		height: onlyEditWikidata ? 300 : 450,
-		optionsConfig: optionsConfig
-	} );
+		optionsConfig = [
+			{
+				preferences: [
+					{
+						header: mw.msg( 'sdh-header-general' ),
+						options: [
+							new CheckboxOption( {
+								name: 'MarkAsMinor',
+								label: mw.msg( 'sdh-MarkAsMinor-label' ),
+								defaultValue: false,
+								hide: onlyEditWikidata
+							} ),
+							new CheckboxOption( {
+								name: 'AddToRedirect',
+								label: mw.msg( 'sdh-AddToRedirect-label' ),
+								help: mw.msg( 'sdh-AddToRedirect-help' ),
+								defaultValue: false
+							} )
+						]
+					},
+					{
+						header: mw.msg( 'sdh-header-appearance' ),
+						options: [
+							new NumberOption( {
+								name: 'InputWidth',
+								label: mw.msg( 'sdh-InputWidth-label' ),
+								defaultValue: 35,
+								UIconfig: {
+									min: 10,
+									max: 999
+								}
+							} ),
+							new NumberOption( {
+								name: 'FontSize',
+								label: mw.msg( 'sdh-FontSize-label' ),
+								defaultValue: 100,
+								UIconfig: {
+									min: 10,
+									max: 999
+								}
+							} )
+						]
+					},
+					{
+						header: mw.msg( 'sdh-header-Wikidata' ),
+						hide: onlyEditWikidata,
+						options: [
+							new DropdownOption( {
+								name: 'SaveWikidata',
+								label: mw.msg( 'sdh-SaveWikidata-label' ),
+								help: mw.msg( 'sdh-SaveWikidata-help' ),
+								defaultValue: 'add',
+								values: [
+									{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
+									{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
+									{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
+								]
+							} )
+						]
+					}
+				]
+			}
+		];
 
-	var options = settings.get();
+		settings = new mw.libs.libSettings.Settings( {
+			title: mw.msg( 'sdh-settingsDialog-title' ),
+			scriptName: 'Shortdesc-helper',
+			helpInline: true,
+			size: 'medium',
+			height: onlyEditWikidata ? 300 : 450,
+			optionsConfig: optionsConfig
+		} );
+
+		options = settings.get();
+	} else {
+		options = {
+			MarkAsMinor: false,
+			AddToRedirect: false,
+			InputWidth: 35,
+			FontSize: 100,
+			SaveWikidata: 'add'
+		};
+	}
 
 	/* Dynamic CSS based on options */
 	mw.util.addCSS(
@@ -506,7 +520,7 @@ window.sdh.main = function () {
 				actionField.toggle();
 			} else {
 				mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
-					var length, saveInput;
+					var length, saveInput, savecancelButtons;
 					// Define the input box and buttons.
 					var descriptionInput = new OO.ui.TextInputWidget( {
 						autocomplete: false,
@@ -544,15 +558,21 @@ window.sdh.main = function () {
 						settings.display();
 					} );
 
-					var savecancelButtons = new OO.ui.ButtonGroupWidget( {
-						items: [ saveButton, cancelButton, settingsButton ]
-					} );
+					var items = [ saveButton, cancelButton ];
 
 					// On change, update character count label.
 					var updateOnChange = function () {
 						length = descriptionInput.getInputLength();
 						descriptionInput.setLabel( String( length ) );
 					};
+
+					if ( usinglibSettings ) {
+						items.push( settingsButton );
+					}
+
+					savecancelButtons = new OO.ui.ButtonGroupWidget( {
+						items: items
+					} );
 
 					// This is bound to the save button
 					saveInput = function () {
