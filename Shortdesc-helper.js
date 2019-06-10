@@ -80,7 +80,7 @@ window.sdh.initMessages = function () {
 		'sdh-summary-adding-custom': 'Adding custom [[Wikipedia:Short description|short description]]: $2',
 		'sdh-summary-importing-wikidata': 'Importing Wikidata [[Wikipedia:Short description|short description]]: $2',
 		'sdh-summary-adding-local': 'Adding local [[Wikipedia:Short description|short description]]: $2',
-		'sdh-summary-adding': 'Adding [Wikipedia:Short description|short description]]: $2',
+		'sdh-summary-adding': 'Adding [[Wikipedia:Short description|short description]]: $2',
 		/* Failure message */
 		'sdh-edit-failed': 'Saving the addition of or edit to the short description failed.',
 		'sdh-edit-failed-no-template': 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.'
