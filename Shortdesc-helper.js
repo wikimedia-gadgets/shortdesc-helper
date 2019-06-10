@@ -36,7 +36,7 @@ window.sdh.initMessages = function () {
 		'sdh-add-title': 'Add short description',
 		'sdh-edit-label': 'Edit',
 		'sdh-edit-title': 'Edit short description',
-		/* Editing messsages */
+		/* Editing messages */
 		'sdh-save-label': 'Save',
 		'sdh-save-title': 'Save description',
 		'sdh-cancel-label': 'Cancel',
