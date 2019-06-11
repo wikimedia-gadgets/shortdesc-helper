@@ -13,6 +13,7 @@
  * and easier editing of them by giving buttons and inputbox for doing so.
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ.
 */
+'use strict';
 window.sdh = window.sdh || {};
 
 /* Set messages using mw.message.
@@ -94,12 +95,12 @@ window.sdh.initMessages = function () {
 };
 
 window.sdh.main = function () {
-	'use strict';
 	/* Consts */
 	var section;
 	var sdelement = '.shortdescription';
+	var $description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
 
-	/* Grab config variables */
+	/* Config variables */
 	var title = mw.config.get( 'wgPageName' );
 	var namespace = mw.config.get( 'wgNamespaceNumber' );
 	var wgQid = mw.config.get( 'wgWikibaseItemId' );
@@ -295,7 +296,7 @@ window.sdh.main = function () {
 
 	/* Execute main code once the short description is gotten */
 	$.when( callPromiseDescription ).then( function ( response ) {
-		var summaryMsg, change, $description, infoPopup, actionField, AddWikidata;
+		var summaryMsg, change, infoPopup, actionField, AddWikidata;
 
 		var pages = response.query.pages[ 0 ];
 		var pageDescription = pages.description;
@@ -310,7 +311,7 @@ window.sdh.main = function () {
 		/* Creates "clickies", simple link buttons. */
 		/* Things are made nice per https://stackoverflow.com/a/10510353 */
 		var Clicky = function ( msgName, func ) {
-			this.button = $( '<span>' )
+			return $( '<span>' )
 				.addClass( 'sdh-clicky' )
 				.append( $( '<a>' )
 					.attr( {
@@ -610,6 +611,7 @@ window.sdh.main = function () {
 			}
 		};
 
+		/* Add clickies to $description */
 		var combineClickies = function ( clickyElements ) {
 			var clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 			if ( clickyElements !== [] ) {
@@ -620,6 +622,7 @@ window.sdh.main = function () {
 			}
 		};
 
+		/* Display the initial text and buttons by attaching to #contentSub */
 		var appendDescription = function () {
 			// Undo padding used to fix content jump
 			mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
@@ -631,9 +634,114 @@ window.sdh.main = function () {
 			);
 		};
 
-		var updateSDH = function ( clickyElements ) {
+		var updateSDH = function ( textElement, clickyElements, popupElement ) {
+			if ( popupElement ) {
+				clickyElements.push( popupElement );
+			}
+			$description.append( textElement );
 			combineClickies( clickyElements );
 			appendDescription();
+		};
+
+		var texts = {
+			noDescription: $( '<span>' )
+				.addClass( 'sdh-no-description' )
+				.text( mw.msg( 'sdh-no-description' ) ),
+			missingDescription: $( '<span>' )
+				.addClass( 'sdh-missing-description' )
+				.html( mw.msg( 'sdh-missing-description', ( isRedirect ? 'redirect' : 'article' ) ) ),
+			pageDescription: $( '<span>' )
+				.addClass( 'mw-page-description ' )
+				.text( pageDescription )
+		};
+
+		var clickies = {
+			add: new Clicky(
+				'sdh-add',
+				function () {
+					summaryMsg = 'sdh-summary-adding';
+					AddWikidata = true;
+					textInput();
+				}
+			),
+			addNone: new Clicky(
+				'sdh-add',
+				function () {
+					summaryMsg = 'sdh-summary-changing';
+					change = true;
+					pageDescription = '';
+					textInput();
+				}
+			),
+			edit: new Clicky(
+				'sdh-edit',
+				function () {
+					summaryMsg = 'sdh-summary-changing';
+					change = true;
+					textInput();
+				}
+			),
+			import: new Clicky(
+				'sdh-import',
+				function () {
+					var x;
+					// Disable all clicky buttons
+					$( '.sdh-clicky a' )
+						.css( 'pointer-events', 'none' )
+						.off();
+
+					// Add processing ... animation
+					$( '#sdh-showdescrip ' ).append(
+						$( '<div>' )
+							.addClass( 'sdh-processing' )
+							.css( 'margin-left', '0.5em' )
+					);
+
+					for ( x = 0; x < 3; x++ ) {
+						$( '.sdh-processing' ).append(
+							$( '<div>' )
+								.addClass( [
+									'sdh-processing-dot',
+									'sdh-processing-dot-' + x
+								] )
+								.text( '.' )
+						);
+					}
+
+					summaryMsg = 'sdh-summary-importing-wikidata';
+					editDescription( pageDescription );
+				}
+			),
+			editimport: new Clicky(
+				'sdh-editimport',
+				function () {
+					summaryMsg = 'sdh-summary-adding-local';
+					textInput();
+				}
+			),
+			override: new Clicky(
+				'sdh-override',
+				function () {
+					summaryMsg = 'sdh-summary-adding-custom';
+					textInput();
+				}
+			),
+			wikidataLink: $( '<span>' )
+				.addClass( 'sdh-clicky' )
+				.append( $( '<a>' )
+					.attr( 'href', 'https://www.wikidata.org/wiki/Special:SetLabelDescriptionAliases/' + wgQid + '/' + language )
+					.addClass( 'sdh-wikidata-description' )
+					.text( mw.msg( 'sdh-wikidata-link-label' ) )
+				)
+		};
+
+		var popups = {
+			noDescription: new InfoClickyPopup(
+				mw.msg( 'sdh-no-description-popup' )
+			).$element,
+			override: new InfoClickyPopup(
+				mw.msg( 'sdh-override-popup' )
+			).$element
 		};
 
 		/* This code creates the initial display - showing the short description and
@@ -647,173 +755,74 @@ window.sdh.main = function () {
 		 * and added to the main wrapping div, #sdh using appendDescription.
 		*/
 		$.when( callPromiseText, $.ready ).then( function ( leadResult ) {
-			var descriptionFromText;
+			var descriptionFromText, textElement, popupElement;
 			var clickyElements = [];
+
+			var showMissing = ( // Whether to show "Missing article description" if applicable
+				namespace === 0 &&
+				( !isRedirect || ( isRedirect && options.AddToRedirect ) )
+			);
+
+			/* If not enwiki, complete logic for non-enwiki case and exit. */
+			if ( onlyEditWikidata ) {
+				if ( pageDescription ) {
+					clickyElements.push( clickies.edit );
+				} else if ( showMissing ) {
+					textElement = texts.missingDescription;
+					clickyElements.push( clickies.add );
+				}
+				updateSDH( textElement, clickyElements, popupElement );
+				return;
+			}
+
 			if ( isLocal ) {
 				descriptionFromText = shortdescInText( leadResult[ 0 ] )[ 1 ];
 			} else {
 				descriptionFromText = false;
 			}
 
-			$description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
-
 			// eslint-disable-next-line no-irregular-whitespace
 			// Handle {{Shor​t description|none}}
 			if ( descriptionFromText && ( descriptionFromText === 'none' ) ) {
-				$description.append(
-					$( '<span>' )
-						.text( mw.msg( 'sdh-no-description' ) )
-				);
-
-				clickyElements.push(
-					new Clicky(
-						'sdh-add',
-						function () {
-							summaryMsg = 'sdh-summary-changing';
-							change = true;
-							pageDescription = '';
-							textInput();
-						}
-					).button,
-					new InfoClickyPopup(
-						mw.msg( 'sdh-no-description-popup' )
-					).$element
-				);
-
-				updateSDH( clickyElements );
+				textElement = texts.noDescription;
+				clickyElements.push( clickies.addNone );
+				popupElement = popups.noDescription;
+				updateSDH( textElement, clickyElements, popupElement );
 				return;
 			}
 
 			if ( pageDescription ) {
-				$description.append(
-					$( '<span>' )
-						.text( pageDescription )
-						.addClass( 'mw-page-description ' )
-				);
-
-				if ( !isLocal && !onlyEditWikidata ) {
-					clickyElements.push(
-						$( '<span>' )
-							.addClass( 'sdh-clicky' )
-							.append( $( '<a>' )
-								.attr( 'href', 'https://www.wikidata.org/wiki/Special:SetLabelDescriptionAliases/' + wgQid + '/' + language )
-								.addClass( 'sdh-wikidata-description' )
-								.text( mw.msg( 'sdh-wikidata-link-label' ) )
-							)
-					);
-				}
-
-				if ( allowEditing ) {
-					if ( isLocal ) {
-						if ( descriptionFromText ) {
-							clickyElements.push(
-								new Clicky(
-									'sdh-edit',
-									function () {
-										summaryMsg = 'sdh-summary-changing';
-										change = true;
-										textInput();
-									}
-								).button
-							);
-						} else {
-							clickyElements.push(
-								new Clicky(
-									'sdh-override',
-									function () {
-										summaryMsg = 'sdh-summary-adding-custom';
-										textInput();
-									}
-								).button,
-								new InfoClickyPopup(
-									mw.msg( 'sdh-override-popup' )
-								).$element
-							);
-						}
+				textElement = texts.pageDescription;
+				if ( isLocal ) {
+					if ( descriptionFromText ) {
+						clickyElements.push( clickies.edit );
 					} else {
-						if ( onlyEditWikidata ) {
-							clickyElements.push(
-								new Clicky(
-									'sdh-edit',
-									function () {
-										textInput();
-									}
-								).button
-							);
-						} else {
-							clickyElements.push(
-								new Clicky(
-									'sdh-import',
-									function () {
-										var x;
-										// Disable all clicky buttons
-										$( '.sdh-clicky a' )
-											.css( 'pointer-events', 'none' )
-											.off();
-
-										// Add processing ... animation
-										$( '#sdh-showdescrip ' ).append(
-											$( '<div>' )
-												.addClass( 'sdh-processing' )
-												.css( 'margin-left', '0.5em' )
-										);
-
-										for ( x = 0; x < 3; x++ ) {
-											$( '.sdh-processing' ).append(
-												$( '<div>' )
-													.addClass( [
-														'sdh-processing-dot',
-														'sdh-processing-dot-' + x
-													] )
-													.text( '.' )
-											);
-										}
-
-										summaryMsg = 'sdh-summary-importing-wikidata';
-										editDescription( pageDescription );
-									}
-								).button,
-								new Clicky(
-									'sdh-editimport',
-									function () {
-										summaryMsg = 'sdh-summary-adding-local';
-										textInput();
-									}
-								).button
-							);
-						}
+						clickyElements.push( clickies.override );
+						popupElement = popups.override;
 					}
-				}
-				updateSDH( clickyElements );
-			} else if (
-				namespace === 0 &&
-				( !isRedirect || ( isRedirect && options.AddToRedirect ) )
-			) {
-				// indicate that description is missing
-				$description = (
-					$( '<div>' )
-						.prop( 'id', 'sdh-showdescrip' )
-						.append(
-							$( '<span>' )
-								.addClass( 'sdh-missing-description' )
-								.html( mw.msg( 'sdh-missing-description', ( isRedirect ? 'redirect' : 'article' ) ) )
-						)
-				);
-
-				if ( allowEditing ) {
+				} else {
 					clickyElements.push(
-						new Clicky(
-							'sdh-add',
-							function () {
-								summaryMsg = 'sdh-summary-adding';
-								AddWikidata = true;
-								textInput();
-							}
-						).button
+						clickies.import,
+						clickies.editimport
 					);
 				}
-				updateSDH( clickyElements );
+			} else if ( showMissing ) {
+				// indicate that description is missing
+				textElement = texts.missingDescription;
+				clickyElements.push( clickies.add );
 			}
+
+			/* Don't show clickies for editing if not allowing editing */
+			if ( !allowEditing ) {
+				clickyElements = [];
+			}
+
+			/* Show wikidata link at beginning if displaying non-local description. */
+			if ( pageDescription && !isLocal ) {
+				clickyElements.unshift( clickies.wikidataLink );
+			}
+
+			updateSDH( textElement, clickyElements, popupElement );
 		} );
 		/* Close callPromiseDescription, and wrapping function */
 	} );
