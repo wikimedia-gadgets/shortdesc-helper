@@ -17,7 +17,7 @@
 window.sdh = window.sdh || {};
 
 /* Set messages using mw.message.
-** window.sdh.messages can be used to override these messages (for e.g translations).
+ * window.sdh.messages can be used to override these messages (for e.g translations).
 */
 window.sdh.initMessages = function () {
 	/* These messages are used on all wikis and so need translation. */
@@ -50,7 +50,7 @@ window.sdh.initMessages = function () {
 	};
 
 	/* These messages don't need translation as they are only used on enwiki
-	** because enwiki has the {{SHORTDESC:}} magic word. */
+	 * because enwiki has the {{SHORTDESC:}} magic word. */
 	var enwikiMessages = {
 		/* Settings messages */
 		'sdh-MarkAsMinor-label': 'Mark edits as minor',
@@ -88,7 +88,7 @@ window.sdh.initMessages = function () {
 	};
 
 	/* Settings window.sdh.messages last means it overrides previous messages
-	** Thus allowing translations to override previous messages.*/
+	 * Thus allowing translations to override previous messages.*/
 	mw.messages.set( messages );
 	mw.messages.set( enwikiMessages );
 	mw.messages.set( window.sdh.messages );
@@ -110,11 +110,11 @@ window.sdh.main = function () {
 	var DBName = mw.config.get( 'wgDBname' );
 
 	/* onlyEditWikidata is a site-wide flag.
-	** If it is true, then the only descriptions for the wiki are assumed to be on Wikidata.
-	** If it is false, then that means descriptions can also be added through {{SHORTDESC:}}
-	** (currently, this is only the case on enwiki).
-	** This flag modifies the behaviour of various methods to display the appropriate buttons and
-	** settings, and makes that the description is saved in the right place.
+	 * If it is true, then the only descriptions for the wiki are assumed to be on Wikidata.
+	 * If it is false, then that means descriptions can also be added through {{SHORTDESC:}}
+	 * (currently, this is only the case on enwiki).
+	 * This flag modifies the behaviour of various methods to display the appropriate buttons and
+	 * settings, and makes that the description is saved in the right place.
 	*/
 	var onlyEditWikidata = ( DBName !== 'enwiki' );
 
@@ -171,12 +171,12 @@ window.sdh.main = function () {
 		}
 		if ( $( sdelement ).length > 0 ) {
 		/* Find whether the short description is in the first section, to determine
-		** if we need to download the wikitext of the entire page.
-		** Do this by searching elements above the first heading for ".shortdescription" */
+		 * if we need to download the wikitext of the entire page.
+		 * Do this by searching elements above the first heading for ".shortdescription"*/
 			elements = $( '.mw-parser-output > h2' ).first().prevAll();
 			/* Need to check sibling elements with filter and their children
-			** with find to find short description. If length > 0 then found
-			** short description before the first heading, so get wikitext of section 0. */
+			 * with find to find short description. If length > 0 then found
+			 * short description before the first heading, so get wikitext of section 0. */
 			if ( elements.filter( sdelement ).add( elements.find( sdelement ) ).length > 0 ) {
 				section = 0;
 			}
@@ -195,7 +195,7 @@ window.sdh.main = function () {
 	} );
 
 	/* Load settings using libSettings if it exists
-	** Otherwise gracefully fallback to defaults. */
+	 * Otherwise gracefully fallback to defaults. */
 	var usinglibSettings = !!mw.libs.libSettings;
 	var CheckboxOption, NumberOption, DropdownOption, optionsConfig, settings, options;
 
@@ -431,7 +431,7 @@ window.sdh.main = function () {
 			};
 
 			/* Appends, prepends, or replaces the lead section
-			** depending on which of text, prependText, and appendText exists. */
+			 * depending on which of text, prependText, and appendText exists. */
 			var makeEdit = function () {
 				var summary = mw.message(
 					summaryMsg,
@@ -457,7 +457,7 @@ window.sdh.main = function () {
 			};
 
 			/* Replaces the current local short description with the new one.
-			** If the short description doesn't exist in the text, return false. */
+			 * If the short description doesn't exist in the text, return false. */
 			var replaceAndEdit = function ( leadResult ) {
 				var output = shortdescInText( leadResult );
 				var oldtext = output[ 0 ];
@@ -503,7 +503,7 @@ window.sdh.main = function () {
 				makeEdit();
 			} else {
 				/* Get the lead section text again right before making the edit
-				 ** to avoid issues with edit conflicts, and make the edit. */
+				  * to avoid issues with edit conflicts, and make the edit. */
 				$.when( getText() ).then( function ( result ) {
 					if ( !replaceAndEdit( result ) ) {
 						editFailed( 'sdh-edit-failed', cancelButton );
