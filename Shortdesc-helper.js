@@ -6,7 +6,8 @@
  * |_____________________________________________________________________________|
  *
  */
-/* Shortdesc helper: v3.4.2
+/**
+ * Shortdesc helper: v3.4.2
  * Documentation at en.wikipedia.org/wiki/User:Galobtter/Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -16,7 +17,8 @@
 'use strict';
 window.sdh = window.sdh || {};
 
-/* Set messages using mw.message.
+/**
+ * Set messages using mw.message.
  * window.sdh.messages can be used to override these messages (for e.g translations).
 */
 window.sdh.initMessages = function () {
@@ -197,37 +199,35 @@ window.sdh.main = function () {
 	/* Load settings using libSettings if it exists
 	 * Otherwise gracefully fallback to defaults. */
 	var usinglibSettings = !!mw.libs.libSettings;
-	var CheckboxOption, NumberOption, DropdownOption, optionsConfig, settings, options;
+	var ls, optionsConfig, settings, options;
 
 	if ( usinglibSettings ) {
-		CheckboxOption = mw.libs.libSettings.CheckboxOption;
-		NumberOption = mw.libs.libSettings.NumberOption;
-		DropdownOption = mw.libs.libSettings.DropdownOption;
+		ls = mw.libs.libSettings;
 
-		optionsConfig = [
-			{
+		optionsConfig = new ls.OptionsConfig( [
+			new ls.Page( {
 				preferences: [
-					{
+					new ls.Group( {
 						header: mw.msg( 'sdh-header-general' ),
 						options: [
-							new CheckboxOption( {
+							new ls.CheckboxOption( {
 								name: 'MarkAsMinor',
 								label: mw.msg( 'sdh-MarkAsMinor-label' ),
 								defaultValue: false,
 								hide: onlyEditWikidata
 							} ),
-							new CheckboxOption( {
+							new ls.CheckboxOption( {
 								name: 'AddToRedirect',
 								label: mw.msg( 'sdh-AddToRedirect-label' ),
 								help: mw.msg( 'sdh-AddToRedirect-help' ),
 								defaultValue: false
 							} )
 						]
-					},
-					{
+					} ),
+					new ls.Group( {
 						header: mw.msg( 'sdh-header-appearance' ),
 						options: [
-							new NumberOption( {
+							new ls.NumberOption( {
 								name: 'InputWidth',
 								label: mw.msg( 'sdh-InputWidth-label' ),
 								defaultValue: 35,
@@ -236,22 +236,22 @@ window.sdh.main = function () {
 									max: 999
 								}
 							} ),
-							new NumberOption( {
+							new ls.NumberOption( {
 								name: 'FontSize',
 								label: mw.msg( 'sdh-FontSize-label' ),
 								defaultValue: 100,
 								UIconfig: {
 									min: 10,
-									max: 999
+									max: 500
 								}
 							} )
 						]
-					},
-					{
+					} ),
+					new ls.Group( {
 						header: mw.msg( 'sdh-header-Wikidata' ),
 						hide: onlyEditWikidata,
 						options: [
-							new DropdownOption( {
+							new ls.DropdownOption( {
 								name: 'SaveWikidata',
 								label: mw.msg( 'sdh-SaveWikidata-label' ),
 								help: mw.msg( 'sdh-SaveWikidata-help' ),
@@ -263,10 +263,10 @@ window.sdh.main = function () {
 								]
 							} )
 						]
-					}
+					} )
 				]
-			}
-		];
+			} )
+		] );
 
 		settings = new mw.libs.libSettings.Settings( {
 			title: mw.msg( 'sdh-settingsDialog-title' ),
@@ -737,10 +737,10 @@ window.sdh.main = function () {
 
 		var popups = {
 			noDescription: new InfoClickyPopup(
-				mw.msg( 'sdh-no-description-popup' )
+				mw.message( 'sdh-no-description-popup' ).plain()
 			).$element,
 			override: new InfoClickyPopup(
-				mw.msg( 'sdh-override-popup' )
+				mw.message( 'sdh-override-popup' ).plain()
 			).$element
 		};
 
