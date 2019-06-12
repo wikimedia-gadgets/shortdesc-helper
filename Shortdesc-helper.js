@@ -58,7 +58,7 @@ window.sdh.initMessages = function () {
 		'sdh-MarkAsMinor-label': 'Mark edits as minor',
 		'sdh-header-Wikidata': 'Wikidata',
 		'sdh-SaveWikidata-label': 'Save changes to Wikidata',
-		'sdh-SaveWikidata-help': 'You can choose whether to update the Wikidata description when using the script.',
+		'sdh-SaveWikidata-help': 'Whether to update the Wikidata description when using the script.',
 		'sdh-SaveWikidata-add-label': 'Only when no Wikidata description exists (default)',
 		'sdh-SaveWikidata-all-label': 'On all edits',
 		'sdh-SaveWikidata-never-label': 'Never',
@@ -207,6 +207,24 @@ window.sdh.main = function () {
 						label: mw.msg( 'sdh-AddToRedirect-label' ),
 						help: mw.msg( 'sdh-AddToRedirect-help' ),
 						defaultValue: false
+					} ),
+					new ls.CheckboxOption( {
+						name: 'ExportButton',
+						label: mw.msg( 'sdh-ExportButton-label' ),
+						defaultValue: false,
+						hide: onlyEditWikidata
+					} ),
+					new ls.DropdownOption( {
+						name: 'SaveWikidata',
+						label: mw.msg( 'sdh-SaveWikidata-label' ),
+						help: mw.msg( 'sdh-SaveWikidata-help' ),
+						defaultValue: 'add',
+						values: [
+							{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
+							{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
+							{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
+						],
+						hide: onlyEditWikidata
 					} )
 				]
 			} ),
@@ -232,28 +250,6 @@ window.sdh.main = function () {
 						}
 					} )
 				]
-			} ),
-			new ls.Page( {
-				title: mw.msg( 'sdh-header-Wikidata' ),
-				hide: onlyEditWikidata,
-				preferences: [
-					new ls.CheckboxOption( {
-						name: 'ExportButton',
-						label: mw.msg( 'sdh-ExportButton-label' ),
-						defaultValue: false
-					} ),
-					new ls.DropdownOption( {
-						name: 'SaveWikidata',
-						label: mw.msg( 'sdh-SaveWikidata-label' ),
-						help: mw.msg( 'sdh-SaveWikidata-help' ),
-						defaultValue: 'add',
-						values: [
-							{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
-							{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
-							{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
-						]
-					} )
-				]
 			} )
 		] );
 
@@ -262,7 +258,7 @@ window.sdh.main = function () {
 			scriptName: 'Shortdesc-helper',
 			helpInline: true,
 			size: 'large',
-			height: 250,
+			height: 300,
 			optionsConfig: optionsConfig
 		} );
 
@@ -798,6 +794,7 @@ window.sdh.main = function () {
 			/* If not enwiki, complete logic for non-enwiki case and exit. */
 			if ( onlyEditWikidata ) {
 				if ( pageDescription ) {
+					textElement = pageDescription;
 					clickyElements.push( clickies.edit );
 				} else if ( showMissing ) {
 					textElement = texts.missingDescription;
