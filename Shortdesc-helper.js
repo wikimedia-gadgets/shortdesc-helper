@@ -194,67 +194,63 @@ window.sdh.main = function () {
 
 		optionsConfig = new ls.OptionsConfig( [
 			new ls.Page( {
+				title: mw.msg( 'sdh-header-general' ),
 				preferences: [
-					new ls.Group( {
-						header: mw.msg( 'sdh-header-general' ),
-						options: [
-							new ls.CheckboxOption( {
-								name: 'MarkAsMinor',
-								label: mw.msg( 'sdh-MarkAsMinor-label' ),
-								defaultValue: false,
-								hide: onlyEditWikidata
-							} ),
-							new ls.CheckboxOption( {
-								name: 'AddToRedirect',
-								label: mw.msg( 'sdh-AddToRedirect-label' ),
-								help: mw.msg( 'sdh-AddToRedirect-help' ),
-								defaultValue: false
-							} )
-						]
+					new ls.CheckboxOption( {
+						name: 'MarkAsMinor',
+						label: mw.msg( 'sdh-MarkAsMinor-label' ),
+						defaultValue: false,
+						hide: onlyEditWikidata
 					} ),
-					new ls.Group( {
-						header: mw.msg( 'sdh-header-appearance' ),
-						options: [
-							new ls.NumberOption( {
-								name: 'InputWidth',
-								label: mw.msg( 'sdh-InputWidth-label' ),
-								defaultValue: 35,
-								UIconfig: {
-									min: 10,
-									max: 999
-								}
-							} ),
-							new ls.NumberOption( {
-								name: 'FontSize',
-								label: mw.msg( 'sdh-FontSize-label' ),
-								defaultValue: 100,
-								UIconfig: {
-									min: 10,
-									max: 500
-								}
-							} )
-						]
+					new ls.CheckboxOption( {
+						name: 'AddToRedirect',
+						label: mw.msg( 'sdh-AddToRedirect-label' ),
+						help: mw.msg( 'sdh-AddToRedirect-help' ),
+						defaultValue: false
+					} )
+				]
+			} ),
+			new ls.Page( {
+				title: mw.msg( 'sdh-header-appearance' ),
+				preferences: [
+					new ls.NumberOption( {
+						name: 'InputWidth',
+						label: mw.msg( 'sdh-InputWidth-label' ),
+						defaultValue: 35,
+						UIconfig: {
+							min: 10,
+							max: 999
+						}
 					} ),
-					new ls.Group( {
-						header: mw.msg( 'sdh-header-Wikidata' ),
-						hide: onlyEditWikidata,
-						options: [
-							new ls.CheckboxOption( {
-								name: 'ExportButton',
-								label: mw.msg( 'sdh-ExportButton-label' ),
-								defaultValue: false
-							} ),
-							new ls.DropdownOption( {
-								name: 'SaveWikidata',
-								label: mw.msg( 'sdh-SaveWikidata-label' ),
-								help: mw.msg( 'sdh-SaveWikidata-help' ),
-								defaultValue: 'add',
-								values: [
-									{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
-									{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
-									{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
-								]
-							} )
+					new ls.NumberOption( {
+						name: 'FontSize',
+						label: mw.msg( 'sdh-FontSize-label' ),
+						defaultValue: 100,
+						UIconfig: {
+							min: 10,
+							max: 500
+						}
+					} )
+				]
+			} ),
+			new ls.Page( {
+				title: mw.msg( 'sdh-header-Wikidata' ),
+				hide: onlyEditWikidata,
+				preferences: [
+					new ls.CheckboxOption( {
+						name: 'ExportButton',
+						label: mw.msg( 'sdh-ExportButton-label' ),
+						defaultValue: false
+					} ),
+					new ls.DropdownOption( {
+						name: 'SaveWikidata',
+						label: mw.msg( 'sdh-SaveWikidata-label' ),
+						help: mw.msg( 'sdh-SaveWikidata-help' ),
+						defaultValue: 'add',
+						values: [
+							{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
+							{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
+							{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
 						]
 					} )
 				]
@@ -265,8 +261,8 @@ window.sdh.main = function () {
 			title: mw.msg( 'sdh-settingsDialog-title' ),
 			scriptName: 'Shortdesc-helper',
 			helpInline: true,
-			size: 'medium',
-			height: onlyEditWikidata ? 300 : 450,
+			size: 'large',
+			height: 250,
 			optionsConfig: optionsConfig
 		} );
 
@@ -277,6 +273,7 @@ window.sdh.main = function () {
 			AddToRedirect: false,
 			InputWidth: 35,
 			FontSize: 100,
+			ExportButton: false,
 			SaveWikidata: 'add'
 		};
 	}
