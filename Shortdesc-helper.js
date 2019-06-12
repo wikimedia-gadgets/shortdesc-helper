@@ -634,12 +634,12 @@ window.sdh.main = function () {
 				clickyElements.push( popupElement );
 			}
 
-			$description.append(
-				textElement,
-				$clickies.append(
-					clickyElements
-				)
-			);
+			$description.append( textElement );
+
+			if ( clickyElements.length > 0 ) {
+				$clickies.append( clickyElements );
+				$description.append( $clickies );
+			}
 
 			// Undo padding used to fix content jump
 			mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
