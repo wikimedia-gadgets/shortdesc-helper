@@ -316,18 +316,6 @@ window.sdh.main = function () {
 				);
 		};
 
-		/* Creates OOui buttons, which are used for save and cancel. */
-		var OOuiClicky = function ( msgName, func, flags, icon ) {
-			this.button = new OO.ui.ButtonWidget( {
-				label: mw.msg( msgName + '-label' ),
-				icon: icon,
-				title: mw.msg( msgName + '-title' ),
-				flags: flags,
-				classes: [ 'sdh-ooui-clicky' ]
-			} );
-			this.button.on( 'click', func );
-		};
-
 		/* UI function: Clicky + Popup */
 		var InfoClickyPopup = function ( text ) {
 			var self = this;
@@ -353,9 +341,21 @@ window.sdh.main = function () {
 						infoPopup.toggle();
 					}
 				}
-			).button;
+			);
 
 			return self.infoClicky;
+		};
+
+		/* Creates OOui buttons, which are used for save and cancel. */
+		var OOuiClicky = function ( msgName, func, flags, icon ) {
+			this.button = new OO.ui.ButtonWidget( {
+				label: mw.msg( msgName + '-label' ),
+				icon: icon,
+				title: mw.msg( msgName + '-title' ),
+				flags: flags,
+				classes: [ 'sdh-ooui-clicky' ]
+			} );
+			this.button.on( 'click', func );
 		};
 
 		/* Function to check if the short description is in the wikitext
@@ -590,7 +590,9 @@ window.sdh.main = function () {
 					// This is bound to the save button
 					saveInput = function () {
 						var description = descriptionInput.getValue().trim();
-						descriptionInput.pushPending( true );
+						descriptionInput
+							.setDisabled( true )
+							.pushPending( true );
 						items.forEach( function ( item ) {
 							item.setDisabled( true );
 						} );
