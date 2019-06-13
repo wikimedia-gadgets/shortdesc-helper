@@ -51,8 +51,10 @@ window.sdh.initMessages = function () {
 		'sdh-wd-edit-failed-prefix': '\n\nThe info given by Wikidata is that:\n\n'
 	};
 
-	/* These messages don't need translation as they are only used on enwiki
-	 * because enwiki has the {{SHORTDESC:}} magic word. */
+	/**
+	 * These messages don't need translation as they are only used on enwiki
+	 * because enwiki has the {{SHORTDESC:}} magic word.
+	 */
 	var enwikiMessages = {
 		/* Settings messages */
 		'sdh-MarkAsMinor-label': 'Mark edits as minor',
@@ -92,19 +94,31 @@ window.sdh.initMessages = function () {
 		'sdh-edit-failed-no-template': 'Edit failed, as no short description template was found in the page wikitext. This is probably due to an edit conflict.'
 	};
 
-	/* Settings window.sdh.messages last means it overrides previous messages
-	 * Thus allowing translations to override previous messages.*/
+	/**
+	 * Setting window.sdh.messages last means it overrides previous messages
+	 * Thus allowing translations to override previous messages.
+	 */
 	mw.messages.set( messages );
 	mw.messages.set( enwikiMessages );
 	mw.messages.set( window.sdh.messages );
 };
 
 window.sdh.main = function () {
-	/* Consts */
+	/**
+	 * What section the short description is in, to be determined later
+	 * by searching the DOM. Used so that if the short description is in the lead
+	 * only the wikitext of section 0 needs to be downloaded.
+	 * @type {number}
+	 */
 	var section;
+
+	/**
+	 * Selector to find the short description in the DOM.
+	 * @type {string}
+	*/
 	var sdelement = '.shortdescription';
 
-	/* Config variables */
+	// Config variables
 	var title = mw.config.get( 'wgPageName' );
 	var namespace = mw.config.get( 'wgNamespaceNumber' );
 	var wgQid = mw.config.get( 'wgWikibaseItemId' );
@@ -113,17 +127,22 @@ window.sdh.main = function () {
 	var isRedirect = mw.config.get( 'wgIsRedirect' );
 	var DBName = mw.config.get( 'wgDBname' );
 
-	/* onlyEditWikidata is a site-wide flag.
+	/**
+	 * onlyEditWikidata is a site-wide flag.
 	 * If it is true, then the only descriptions for the wiki are assumed to be on Wikidata.
 	 * If it is false, then that means descriptions can also be added through {{SHORTDESC:}}
 	 * (currently, this is only the case on enwiki).
 	 * This flag modifies the behaviour of various methods to display the appropriate buttons and
-	 * settings, and makes that the description is saved in the right place.
+	 * settings, and make the description saved to the right place.
+	 * @type {boolean}
 	*/
 	var onlyEditWikidata = ( DBName !== 'enwiki' );
 
-	/* Check if can edit the page, and disallow editing of templates and categories
-	 * to prevent accidental addition */
+	/**
+	 * Check if the user can edit the page,
+	 * and disallow editing of templates and categories to prevent accidental addition.
+	 * @type {boolean}
+	 */
 	var allowEditing = (
 		(
 			canEdit &&
@@ -131,6 +150,7 @@ window.sdh.main = function () {
 		)
 	);
 
+	// Define user agent when accessing the API
 	var APIoptions = {
 		ajax: {
 			headers: {
@@ -141,6 +161,10 @@ window.sdh.main = function () {
 
 	var API = new mw.Api( APIoptions );
 
+	/**
+	 * Get the wikitext of the page.
+	 * @return {Promise}
+	 */
 	var getText = function () {
 		return API.get( {
 			action: 'query',
@@ -153,30 +177,44 @@ window.sdh.main = function () {
 		} );
 	};
 
-	/* Download wikitext if it is a local description  */
+	/**
+	 * Download wikitext if it is a local description.
+	 * Whether it is a local description is determined through searching the DOM
+	 * since waiting for the description API query to complete would delay
+	 * showing the short description. Also, whether to download the whole wikitext,
+	 * or only the lead section wikitext is determined.
+	 * @type {Promise}
+	 */
 	var callPromiseText = ( function () {
 		var elements;
 		if ( onlyEditWikidata ) {
 			return;
 		}
 		if ( $( sdelement ).length > 0 ) {
-		/* Find whether the short description is in the first section, to determine
+		/**
+		 * Find whether the short description is in the first section, to determine
 		 * if we need to download the wikitext of the entire page.
-		 * Do this by searching elements above the first heading for ".shortdescription"*/
+		 * Do this by searching elements above the first heading for ".shortdescription"
+		 */
 			elements = $( '.mw-parser-output > h2' ).first().prevAll();
-			/* Need to check sibling elements with filter and their children
+			/**
+			 * Need to check sibling elements with filter and their children
 			 * with find to find short description. If length > 0 then found
-			 * short description before the first heading, so get wikitext of section 0. */
+			 * short description before the first heading, so get wikitext of section 0.
+			 */
 			if ( elements.filter( sdelement ).add( elements.find( sdelement ) ).length > 0 ) {
 				section = 0;
 			}
 
-			// Get the lead section text
+			// Get the wikitext
 			return getText();
 		}
 	}() );
 
-	// Get the short description
+	/**
+	 * Get the short description
+	 * @type {Promise}
+	 */
 	var callPromiseDescription = API.get( {
 		action: 'query',
 		titles: title,
@@ -184,8 +222,10 @@ window.sdh.main = function () {
 		formatversion: 2
 	} );
 
-	/* Load settings using libSettings if it exists
-	 * Otherwise gracefully fallback to defaults. */
+	/**
+	 * Load settings using libSettings if it exists
+	 * Otherwise gracefully fallback to defaults.
+	 */
 	var usinglibSettings = !!mw.libs.libSettings;
 	var ls, optionsConfig, settings, options;
 
@@ -264,6 +304,7 @@ window.sdh.main = function () {
 
 		options = settings.get();
 	} else {
+		// Use defaults
 		options = {
 			MarkAsMinor: false,
 			AddToRedirect: false,
@@ -274,28 +315,83 @@ window.sdh.main = function () {
 		};
 	}
 
-	/* Dynamic CSS based on options */
+	// Dynamic CSS based on options
 	mw.util.addCSS(
 		'#sdh { font-size:' + options.FontSize + '%}' +
 		'#sdh-editbox, #sdh-inputbox { max-width:' + options.InputWidth + 'em };'
 	);
 
 	/* Execute main code once the short description is gotten */
-	$.when( callPromiseDescription ).then( function ( response ) {
-		var summaryMsg, change, infoPopup, actionField, AddWikidata;
+	callPromiseDescription.then( function ( response ) {
+		/**
+		 * These two variables are UI elements that need to be closed and reopened,
+		 * and so need to be accessed outside the scope of the functions
+		 * that define them.
+		 */
+
+		/**
+		 * Used in InfoClickyPopup
+		 * @type {OO.ui.PopupWidget}
+		 */
+		var infoPopup;
+
+		/**
+		 * Used in textInput
+		 * @type {OO.ui.ActionFieldLayout}
+		 */
+		var actionField;
+
+		/**
+		 * These three variables are defined by the button being clicked
+		 */
+
+		/**
+		 * The message to be used for the summary
+		 * @type {string}
+		 */
+		var summaryMsg;
+
+		/**
+		 * Is the action a change to an existing local description
+		 * or an addition, importation etc.
+		 * @type {boolean}
+		 */
+		var change;
+
+		/**
+		 * True when there is no description anywhere, and so
+		 * description should be added to Wikidata when options.SaveWikidata is 'add'.
+		 * @type {boolean}
+		 */
+		var addWikidata;
 
 		var pages = response.query.pages[ 0 ];
+
+		/**
+		 * The page short description.
+		 * @type {string}
+		 */
 		var pageDescription = pages.description;
+
+		/**
+		 * Is the description from Wikidata (non local) or the {{SHORTDESC:}} magic word?
+		 * @type {boolean}
+		 */
 		var isLocal = ( pages.descriptionsource === 'local' );
 
-		/* Search pattern for finding short description in wikitext.
- 		 * Group 1 is the short description. */
+		/**
+		 * Search pattern for finding short description in wikitext.
+ 		 * Group 1 is the short description.
+		 */
 		var pattern = /\{\{[Ss]hort description\|(.*?)\}\}/;
 
-		/* UI functions: Buttons */
-
-		/* Creates "clickies", simple link buttons. */
-		/* Things are made nice per https://stackoverflow.com/a/10510353 */
+		/**
+		 * Creates "clickies", simple link buttons.
+		 * Things are made nice per https://stackoverflow.com/a/10510353
+		 * @param {string} msgName
+		 * @param {Function} func
+		 * @return {Object}
+		 */
 		var Clicky = function ( msgName, func ) {
 			return $( '<span>' )
 				.addClass( 'sdh-clicky' )
@@ -316,7 +412,11 @@ window.sdh.main = function () {
 				);
 		};
 
-		/* UI function: Clicky + Popup */
+		/**
+		 * Create a Clicky that opens a OOui PopupWidget.
+		 * @param {string} text
+		 * @return {Clicky}
+		 */
 		var InfoClickyPopup = function ( text ) {
 			var self = this;
 			self.text = text;
@@ -346,37 +446,48 @@ window.sdh.main = function () {
 			return self.infoClicky;
 		};
 
-		/* Creates OOui buttons, which are used for save and cancel. */
+		/**
+		 * Creates OOui buttons, which are used for save and cancel.
+		 * @param {string} msgName
+		 * @param {Function} func
+		 * @param {Array<string>} flags
+		 * @param {string} icon
+		 * @return {OO.ui.ButtonWidget}
+		 */
 		var OOuiClicky = function ( msgName, func, flags, icon ) {
-			this.button = new OO.ui.ButtonWidget( {
+			return new OO.ui.ButtonWidget( {
 				label: mw.msg( msgName + '-label' ),
 				icon: icon,
 				title: mw.msg( msgName + '-title' ),
 				flags: flags,
 				classes: [ 'sdh-ooui-clicky' ]
-			} );
-			this.button.on( 'click', func );
+			} ).on( 'click', func );
 		};
 
-		/* Function to check if the short description is in the wikitext
- 		 * If it is, return the short description as defined in the text
+		/**
+		 * Function to check if the short description is in the wikitext.
+ 		 * If it is, return the wikitext and short description as defined in the text
+		 * @param {Object} wikitextResult
+		 * @return {Array}
 		 */
-		var shortdescInText = function ( leadResult ) {
-			var lead = leadResult.query.pages[ 0 ].revisions[ 0 ].slots.main.content;
-			var match = lead && lead.match( pattern );
+		var shortdescInText = function ( wikitextResult ) {
+			var wikitext = wikitextResult.query.pages[ 0 ].revisions[ 0 ].slots.main.content;
+			var match = wikitext && wikitext.match( pattern );
 			if ( match ) {
-				return [ lead, match[ 1 ] ];
+				return [ wikitext, match[ 1 ] ];
 			} else {
-				return [ lead, false ];
+				return [ wikitext, false ];
 			}
 		};
 
-		// Notify the user that the edit failed and log any debug info
-		var editFailed = function ( msgName, cancelButton, debug, extraMsg ) {
+		/**
+		 * Notify the user that the edit failed and log any debug info.
+		 * @param {string} msgName
+		 * @param {*} debug
+		 * @param {string} extraMsg
+		 */
+		var editFailed = function ( msgName, debug, extraMsg ) {
 			var message = mw.msg( msgName ) + extraMsg;
-			if ( cancelButton ) {
-				cancelButton.setDisabled( false );
-			}
 			mw.notify(
 				message,
 				{
@@ -388,7 +499,11 @@ window.sdh.main = function () {
 			}
 		};
 
-		/* Do the bare function of setting the wikidata description. */
+		/**
+		 * Set the Wikidata description using the API.
+		 * @param {string} newDescription
+		 * @return {Promise}
+		 */
 		var setWikidataDescription = function ( newDescription ) {
 			return mw.loader.using( 'mediawiki.ForeignApi' ).then( function () {
 				var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php', APIoptions );
@@ -402,11 +517,13 @@ window.sdh.main = function () {
 			} );
 		};
 
-		/* This function edits Wikidata descriptions and is used on wikis that aren't enwiki.
+		/**
+		 * This function edits Wikidata descriptions and is used on wikis that aren't enwiki.
 		 * Beyond what setWikidataDescription does, it reloads the page on success
 		 * and gives an informative error notification.
+		 * @param {string} newDescription
 		 */
-		var editWikidataDescription = function ( newDescription, cancelButton ) {
+		var editWikidataDescription = function ( newDescription ) {
 			setWikidataDescription( newDescription ).then(
 				function () {
 					window.location.reload();
@@ -414,7 +531,6 @@ window.sdh.main = function () {
 				function () {
 					editFailed(
 						'sdh-wd-edit-failed',
-						cancelButton,
 						arguments,
 						arguments[ 1 ].error.info ? (
 							mw.msg( 'sdh-wd-edit-failed-prefix' ) +
@@ -425,11 +541,19 @@ window.sdh.main = function () {
 			);
 		};
 
-		/* This function adds or replaces short descriptions. */
-		var editDescription = function ( newDescription, cancelButton ) {
+		/**
+		 * This function adds or replaces short descriptions.
+		 * @param {string} newDescription
+		 */
+		var editDescription = function ( newDescription ) {
 			var replacement, prependText, appendText, text;
 
-			// Helper function to add quotes around text
+			/**
+			 * Helper function to add quotes around text,
+			 * used when generating the summary.
+			 * @param {string} text
+			 * @return {string}
+			 */
 			var quotify = function ( text ) {
 				if ( text === '' || text === 'none' ) {
 					return 'none';
@@ -438,8 +562,10 @@ window.sdh.main = function () {
 				}
 			};
 
-			/* Appends, prepends, or replaces the lead section
-			 * depending on which of text, prependText, and appendText exists. */
+			/**
+			 * Appends, prepends, or replaces the wikitext.
+			 * depending on which of text, prependText, and appendText exists.
+			 */
 			var makeEdit = function () {
 				var summary = mw.message(
 					summaryMsg,
@@ -460,14 +586,19 @@ window.sdh.main = function () {
 					// Reload the page
 					window.location.reload();
 				} ).fail( function () {
-					editFailed( 'sdh-edit-failed', cancelButton, arguments );
+					editFailed( 'sdh-edit-failed', arguments );
 				} );
 			};
 
-			/* Replaces the current local short description with the new one.
-			 * If the short description doesn't exist in the text, return false. */
-			var replaceAndEdit = function ( leadResult ) {
-				var output = shortdescInText( leadResult );
+			/**
+			 * Replaces the current local short description with the new one.
+			 * If the short description doesn't exist in the text, return false.
+			 * @param {string} wikitextResult Result of getText()
+			 * @return {boolean} Whether there was a description in the wikitext
+			 * and so whether makeEdit could be called.
+			 */
+			var replaceAndEdit = function ( wikitextResult ) {
+				var output = shortdescInText( wikitextResult );
 				var oldtext = output[ 0 ];
 				var descriptionFromText = output[ 1 ];
 				if ( descriptionFromText ) {
@@ -479,10 +610,10 @@ window.sdh.main = function () {
 				}
 			};
 
-			/* Make edits to Wikidata as appropiate */
+			// Make edits to Wikidata as appropiate
 			if (
 				wgQid &&
-				( options.SaveWikidata === 'all' || options.SaveWikidata === 'add' && AddWikidata ) &&
+				( options.SaveWikidata === 'all' || options.SaveWikidata === 'add' && addWikidata ) &&
 				newDescription !== ''
 			) {
 				setWikidataDescription( newDescription );
@@ -490,8 +621,10 @@ window.sdh.main = function () {
 
 			// Capitalize first letter by default unless editing local description
 			if ( !isLocal ) {
-				newDescription = newDescription.charAt( 0 ).toUpperCase() +
-						newDescription.slice( 1 );
+				newDescription = (
+					newDescription.charAt( 0 ).toUpperCase() +
+					newDescription.slice( 1 )
+				);
 			}
 
 			if ( newDescription === '' ) {
@@ -501,39 +634,42 @@ window.sdh.main = function () {
 			// eslint-disable-next-line no-useless-concat
 			replacement = '{' + '{short description|' + newDescription + '}}';
 
-			// var change is defined by the button that was clicked
-			if ( !change ) {
+			/**
+			 * change = true means there was a previous short description in the wikitext
+			 * that needs to be replaced.
+			 */
+			if ( change ) {
+				/**
+				 * Get the wikitext again right before making the edit
+				 * to avoid issues with edit conflicts, and make the edit.
+				 */
+				getText().then( function ( result ) {
+					if ( !replaceAndEdit( result ) ) {
+						editFailed( 'sdh-edit-failed' );
+					}
+				} );
+			} else {
 				if ( isRedirect ) {
 					appendText = '\n' + replacement;
 				} else {
 					prependText = replacement + '\n';
 				}
 				makeEdit();
-			} else {
-				/**
-				 * Get the lead section text again right before making the edit
-				 * to avoid issues with edit conflicts, and make the edit.
-				 */
-				$.when( getText() ).then( function ( result ) {
-					if ( !replaceAndEdit( result ) ) {
-						editFailed( 'sdh-edit-failed', cancelButton );
-					}
-				} );
 			}
 		};
 
-		/* Creates input box with save and cancel buttons. */
+		/**
+		 * Creates input box with save and cancel buttons.
+		 * If input box was created before, show it again.
+	 	 * Otherwise, create the input box using OOui.
+		*/
 		var textInput = function () {
-			/**
-			 * If reopening the input box, show it again.
-	 		 * Otherwise, create the input box using OOui.
-			*/
 			if ( actionField ) {
 				$( '#sdh-showdescrip' ).hide( 0 );
 				actionField.toggle();
 			} else {
 				mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
-					var length, saveInput, savecancelButtons;
+					var length, saveInput, buttons;
 					// Define the input box and buttons.
 					var descriptionInput = new OO.ui.TextInputWidget( {
 						autocomplete: false,
@@ -550,7 +686,7 @@ window.sdh.main = function () {
 							saveInput();
 						},
 						[ 'primary', 'progressive' ]
-					).button;
+					);
 
 					var cancelButton = new OOuiClicky(
 						'sdh-cancel',
@@ -559,7 +695,7 @@ window.sdh.main = function () {
 							$( '#sdh-showdescrip' ).show( 0 );
 						},
 						[ 'safe', 'destructive' ]
-					).button;
+					);
 
 					var settingsButton = new OO.ui.ButtonWidget( {
 						icon: 'settings',
@@ -571,23 +707,27 @@ window.sdh.main = function () {
 						settings.display();
 					} );
 
-					var items = [ saveButton, cancelButton ];
-
 					// On change, update character count label.
 					var updateOnChange = function () {
 						length = descriptionInput.getInputLength();
 						descriptionInput.setLabel( String( length ) );
 					};
 
+					var items = [ saveButton, cancelButton ];
+
 					if ( usinglibSettings ) {
 						items.push( settingsButton );
 					}
 
-					savecancelButtons = new OO.ui.ButtonGroupWidget( {
+					buttons = new OO.ui.ButtonGroupWidget( {
 						items: items
 					} );
 
-					// This is bound to the save button
+					/**
+					 * This is bound to the save button.
+					 * Disables all the elements and calls the relevant function
+					 * responsible for saving the the entered short description.
+					*/
 					saveInput = function () {
 						var description = descriptionInput.getValue().trim();
 						descriptionInput
@@ -597,17 +737,15 @@ window.sdh.main = function () {
 							item.setDisabled( true );
 						} );
 						if ( onlyEditWikidata ) {
-							editWikidataDescription( description, cancelButton );
+							editWikidataDescription( description );
 						} else {
-							editDescription( description, cancelButton );
+							editDescription( description );
 						}
 					};
 
-					$( '#sdh-showdescrip' ).hide( 0 );
-
 					actionField = new OO.ui.ActionFieldLayout(
 						descriptionInput,
-						savecancelButtons, {
+						buttons, {
 							label: '', // For some dumb reason, the buttons won't align with the inputbox unless a dummy label is put
 							align: 'top',
 							id: [ 'sdh-editbox' ]
@@ -620,13 +758,21 @@ window.sdh.main = function () {
 					descriptionInput.on( 'change', updateOnChange );
 					descriptionInput.on( 'enter', saveInput );
 
+					// Hide previous displayed clickies and add to DOM
+					$( '#sdh-showdescrip' ).hide( 0 );
 					$( '#sdh' ).append( actionField.$element );
 				} );
 			}
 		};
 
-		/* Create the html and append it to the DOM */
+		/**
+		 * Create the html and append it to the DOM
+		 * @param {Object} textElement
+		 * @param {Array<Clicky>} clickyElements
+		 * @param {InfoClickyPopup} popupElement
+		 */
 		var updateSDH = function ( textElement, clickyElements, popupElement ) {
+			var $sdh = $( '<div>' ).prop( 'id', 'sdh' );
 			var $description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
 			var $clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 
@@ -641,15 +787,14 @@ window.sdh.main = function () {
 				$description.append( $clickies );
 			}
 
-			// Undo padding used to fix content jump
-			mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
+			$sdh.append( $description );
 
-			// Create and attach the main div to #contentSub
-			$( '#contentSub' ).append(
-				$( '<div>' )
-					.prop( 'id', 'sdh' )
-					.append( $description )
-			);
+			$.ready.then( function () {
+				// Undo padding used to fix content jump
+				mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
+				// Create and attach the main div to #contentSub
+				$( '#contentSub' ).append( $sdh );
+			} );
 		};
 
 		/**
@@ -703,7 +848,7 @@ window.sdh.main = function () {
 				'sdh-add',
 				function () {
 					summaryMsg = 'sdh-summary-adding';
-					AddWikidata = true;
+					addWikidata = true; // Description should be added to wikidata in this case
 					textInput();
 				}
 			),
@@ -772,28 +917,47 @@ window.sdh.main = function () {
 		};
 
 		/**
-		 * This code determines what elements should make up the initial display.
 		 * Depending on various factors, such as
 		 * whether the description exists,
 		 * whether the description is on wikidata or not,
 		 * and whether the page is in mainspace,
-		 * this code determines what the textElement should be
-		 * (the short description, a message saying no description exists etc),
-		 * what the relevant buttons ("clickies") are from var clickies,
-		 * and what popup should be there.
-		 * Once clickyElements is generated, updateSDH() is called to generated the html
+		 * this code determines what elements should make up the initial display.
+		 * updateSDH() is then called to generate the html
 		 * and add that to the DOM.
+		 * @param {Object} wikitextResult
 		*/
-		$.when( callPromiseText, $.ready ).then( function ( leadResult ) {
-			var descriptionFromText, textElement, popupElement;
+		var determineElements = function ( wikitextResult ) {
+			/**
+			 * The description as determined from the wikitext.
+			 * @type {string}
+			 */
+			var descriptionFromText;
+
+			/**
+			 * The short description or a message saying no description exists etc.
+			 * @type {Object}
+			 */
+			var textElement;
+
+			/**
+			 * What the relevant buttons ("clickies") are.
+			 * @type {Array<Clicky>}
+			 */
 			var clickyElements = [];
 
-			var showMissing = ( // Whether to show "Missing article description" if applicable
+			/**
+			 * what clickable popup explanation is there if any
+			 * @type {InfoClickyPopup}
+			 */
+			var popupElement;
+
+			// Whether to show "Missing article description" if applicable
+			var showMissing = (
 				namespace === 0 &&
 				( !isRedirect || ( isRedirect && options.AddToRedirect ) )
 			);
 
-			/* If not enwiki, complete logic for non-enwiki case and exit. */
+			// If not enwiki, complete logic for non-enwiki case and exit.
 			if ( onlyEditWikidata ) {
 				if ( pageDescription ) {
 					textElement = pageDescription;
@@ -811,23 +975,24 @@ window.sdh.main = function () {
 			 * or if it is on Wikidata/generated by an infobox.
 			 */
 			if ( isLocal ) {
-				descriptionFromText = shortdescInText( leadResult[ 0 ] )[ 1 ];
+				descriptionFromText = shortdescInText( wikitextResult )[ 1 ];
 			} else {
 				descriptionFromText = false;
 			}
 
-			/* Show wikidata link at beginning if displaying non-local description. */
+			// Show wikidata link at beginning if displaying non-local description.
 			if ( pageDescription && !isLocal ) {
 				clickyElements.push( clickies.wikidataLink );
 			}
 
-			// eslint-disable-next-line no-irregular-whitespace
-			// Handle {{Shor​t description|none}}
-			if ( descriptionFromText && ( descriptionFromText === 'none' ) ) {
+			if ( descriptionFromText === 'none' ) {
+				// eslint-disable-next-line no-irregular-whitespace
+				// Handle {{Shor​t description|none}}
 				textElement = texts.noDescription;
 				clickyElements.push( clickies.addNone );
 				popupElement = popups.noDescription;
 			} else {
+				// Handle remaining cases
 				if ( pageDescription ) {
 					textElement = texts.pageDescription;
 					if ( isLocal ) {
@@ -844,13 +1009,12 @@ window.sdh.main = function () {
 						);
 					}
 				} else if ( showMissing ) {
-					// indicate that description is missing
 					textElement = texts.missingDescription;
 					clickyElements.push( clickies.add );
 				}
 			}
 
-			/* Don't show clickies for editing if not allowing editing */
+			// Don't show clickies for editing if not allowing editing
 			if ( !allowEditing ) {
 				clickyElements = [];
 			}
@@ -860,8 +1024,15 @@ window.sdh.main = function () {
 			}
 
 			updateSDH( textElement, clickyElements, popupElement );
-		} );
-		/* Close callPromiseDescription, and wrapping function */
+		};
+
+		if ( callPromiseText ) {
+			callPromiseText.then( function ( wikitextResult ) {
+				determineElements( wikitextResult );
+			} );
+		} else {
+			determineElements();
+		}
 	} );
 };
 
