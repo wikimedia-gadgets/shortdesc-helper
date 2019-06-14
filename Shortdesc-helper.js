@@ -1042,6 +1042,10 @@ if (
 	!mw.config.get( 'wgDiffOldId' ) &&
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
+	// Fix for Visual Editor, which does not reload after most edits
+	mw.hook( 'postEdit' ).add( function () {
+		window.sdh.main();
+	} );
 	window.sdh.initMessages();
 	window.sdh.main();
 }
