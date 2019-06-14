@@ -1043,6 +1043,24 @@ if (
 	!mw.config.get( 'wgDiffOldId' ) &&
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
+	/**
+	 * TODO: Post edit hook fires too early - if adding short description using VE,
+	 * won't show right description (very very edge case though - minor thing).
+	 * Needs more testing too.
+	 * Fire on postEdit hook to load after Visual Editor saves,
+	 * as VE does not actually reload the page.
+	 * Unfortunately, postEdit fires both after regular edits and VE edits,
+	 * so duplicate instances will be caused after a regular edit if run always
+	 * on postEdit.
+	 * window.sdh.hasRun is set to true below, and will be undefined after a proper reload,
+	 * but not after a dynamic VE reload.
+	*/
+	mw.hook( 'postEdit' ).add( function () {
+		if ( window.sdh.hasRun ) {
+			window.sdh.main();
+		}
+	} );
+	window.sdh.hasRun = true;
 	window.sdh.initMessages();
 	window.sdh.main();
 }
