@@ -112,11 +112,18 @@ window.sdh.main = function () {
 	 */
 	var section;
 
+	// Consts
 	/**
 	 * Selector to find the short description in the DOM.
 	 * @type {string}
 	*/
-	var sdelement = '.shortdescription';
+	var SDELEMENT = '.shortdescription';
+
+	/**
+	 * Search pattern for finding short description in wikitext.
+ 	 * Group 1 in the regex is the short description.
+	*/
+	var PATTERN = /\{\{[Ss]hort description\|(.*?)\}\}/;
 
 	// Config variables
 	var title = mw.config.get( 'wgPageName' );
@@ -190,7 +197,7 @@ window.sdh.main = function () {
 		if ( onlyEditWikidata ) {
 			return;
 		}
-		if ( $( sdelement ).length > 0 ) {
+		if ( $( SDELEMENT ).length > 0 ) {
 		/**
 		 * Find whether the short description is in the first section, to determine
 		 * if we need to download the wikitext of the entire page.
@@ -202,7 +209,7 @@ window.sdh.main = function () {
 			 * with find to find short description. If length > 0 then found
 			 * short description before the first heading, so get wikitext of section 0.
 			 */
-			if ( elements.filter( sdelement ).add( elements.find( sdelement ) ).length > 0 ) {
+			if ( elements.filter( SDELEMENT ).add( elements.find( SDELEMENT ) ).length > 0 ) {
 				section = 0;
 			}
 
@@ -380,12 +387,6 @@ window.sdh.main = function () {
 		var isLocal = ( pages.descriptionsource === 'local' );
 
 		/**
-		 * Search pattern for finding short description in wikitext.
- 		 * Group 1 is the short description.
-		 */
-		var pattern = /\{\{[Ss]hort description\|(.*?)\}\}/;
-
-		/**
 		 * Creates "clickies", simple link buttons.
 		 * Things are made nice per https://stackoverflow.com/a/10510353
 		 * @param {string} msgName
@@ -472,7 +473,7 @@ window.sdh.main = function () {
 		 */
 		var shortdescInText = function ( wikitextResult ) {
 			var wikitext = wikitextResult.query.pages[ 0 ].revisions[ 0 ].slots.main.content;
-			var match = wikitext && wikitext.match( pattern );
+			var match = wikitext && wikitext.match( PATTERN );
 			if ( match ) {
 				return [ wikitext, match[ 1 ] ];
 			} else {
@@ -602,7 +603,7 @@ window.sdh.main = function () {
 				var oldtext = output[ 0 ];
 				var descriptionFromText = output[ 1 ];
 				if ( descriptionFromText ) {
-					text = oldtext.replace( pattern, replacement );
+					text = oldtext.replace( PATTERN, replacement );
 					makeEdit();
 					return true;
 				} else {
@@ -1042,10 +1043,6 @@ if (
 	!mw.config.get( 'wgDiffOldId' ) &&
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
-	// Fix for Visual Editor, which does not reload after most edits
-	mw.hook( 'postEdit' ).add( function () {
-		window.sdh.main();
-	} );
 	window.sdh.initMessages();
 	window.sdh.main();
 }
