@@ -197,12 +197,14 @@ window.sdh.main = function () {
 		if ( onlyEditWikidata ) {
 			return;
 		}
+		// FIXME, should be doing this on wikipage.content hook/or after $.ready
 		if ( $( SDELEMENT ).length > 0 ) {
-		/**
-		 * Find whether the short description is in the first section, to determine
-		 * if we need to download the wikitext of the entire page.
-		 * Do this by searching elements above the first heading for ".shortdescription"
-		 */
+			/**
+			 * Find whether the short description is in the first section, to determine
+			 * if we need to download the wikitext of the entire page.
+			 * Do this by searching elements above the first heading for ".shortdescription"
+			 */
+			// eslint-disable-next-line no-jquery/no-global-selector
 			elements = $( '.mw-parser-output > h2' ).first().prevAll();
 			/**
 			 * Need to check sibling elements with filter and their children
@@ -372,6 +374,10 @@ window.sdh.main = function () {
 		 */
 		var addWikidata;
 
+		var $sdh = $( '<div>' ).prop( 'id', 'sdh' );
+		var $description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
+		var $clickies = $( '<span>' ).addClass( 'sdh-clickies' );
+
 		var pages = response.query.pages[ 0 ];
 
 		/**
@@ -435,7 +441,7 @@ window.sdh.main = function () {
 								width: 300,
 								position: 'after'
 							} );
-							$( '.sdh-clickies' ).append( infoPopup.$element );
+							$clickies.append( infoPopup.$element );
 							infoPopup.toggle();
 						} );
 					} else {
@@ -666,7 +672,7 @@ window.sdh.main = function () {
 		*/
 		var textInput = function () {
 			if ( actionField ) {
-				$( '#sdh-showdescrip' ).hide( 0 );
+				$description.hide( 0 );
 				actionField.toggle();
 			} else {
 				mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
@@ -693,7 +699,7 @@ window.sdh.main = function () {
 						'sdh-cancel',
 						function () {
 							actionField.toggle();
-							$( '#sdh-showdescrip' ).show( 0 );
+							$description.show( 0 );
 						},
 						[ 'safe', 'destructive' ]
 					);
@@ -760,8 +766,8 @@ window.sdh.main = function () {
 					descriptionInput.on( 'enter', saveInput );
 
 					// Hide previous displayed clickies and add to DOM
-					$( '#sdh-showdescrip' ).hide( 0 );
-					$( '#sdh' ).append( actionField.$element );
+					$description.hide( 0 );
+					$sdh.append( actionField.$element );
 				} );
 			}
 		};
@@ -773,10 +779,6 @@ window.sdh.main = function () {
 		 * @param {InfoClickyPopup} popupElement
 		 */
 		var updateSDH = function ( textElement, clickyElements, popupElement ) {
-			var $sdh = $( '<div>' ).prop( 'id', 'sdh' );
-			var $description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
-			var $clickies = $( '<span>' ).addClass( 'sdh-clickies' );
-
 			if ( popupElement ) {
 				clickyElements.push( popupElement );
 			}
@@ -794,6 +796,7 @@ window.sdh.main = function () {
 				// Undo padding used to fix content jump
 				mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
 				// Create and attach the main div to #contentSub
+				// eslint-disable-next-line no-jquery/no-global-selector
 				$( '#contentSub' ).append( $sdh );
 			} );
 		};
@@ -804,20 +807,20 @@ window.sdh.main = function () {
 		*/
 		var setProcessing = function () {
 			var x;
+			var $processing = $( '<div>' )
+				.addClass( 'sdh-processing' )
+				.css( 'margin-left', '0.5em' );
 			// Disable all clicky buttons
-			$( '.sdh-clicky a' )
+			$clickies
+				.children( '.sdh-clicky a' )
 				.css( 'pointer-events', 'none' )
 				.off();
 
 			// Add processing ... animation
-			$( '#sdh-showdescrip ' ).append(
-				$( '<div>' )
-					.addClass( 'sdh-processing' )
-					.css( 'margin-left', '0.5em' )
-			);
+			$description.append( $processing );
 
 			for ( x = 0; x < 3; x++ ) {
-				$( '.sdh-processing' ).append(
+				$processing.append(
 					$( '<div>' )
 						.addClass( [
 							'sdh-processing-dot',
