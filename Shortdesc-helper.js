@@ -580,7 +580,7 @@ window.sdh.main = function () {
 					quotify( newDescription )
 				).plain() +
 				mw.message( 'sdh-summary-append' ).plain();
-				API.postWithToken( 'csrf', {
+				API.postWithEditToken( {
 					action: 'edit',
 					section: section,
 					text: text,
@@ -589,12 +589,15 @@ window.sdh.main = function () {
 					appendtext: appendText,
 					summary: summary,
 					minor: options.MarkAsMinor
-				} ).then( function () {
+				} ).then(
+					function () {
 					// Reload the page
-					window.location.reload();
-				} ).fail( function () {
-					editFailed( 'sdh-edit-failed', arguments );
-				} );
+						window.location.reload();
+					},
+					function () {
+						editFailed( 'sdh-edit-failed', arguments );
+					}
+				);
 			};
 
 			/**
