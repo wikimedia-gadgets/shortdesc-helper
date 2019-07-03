@@ -374,8 +374,11 @@ window.sdh.main = function () {
 		 */
 		var addWikidata;
 
+		/**
+		 * Various HTML elements that make up
+		 */
 		var $sdh = $( '<div>' ).prop( 'id', 'sdh' );
-		var $description = $( '<div>' ).prop( 'id', 'sdh-showdescrip' );
+		var $description = $( '<div>' ).addClass( 'sdh-showdescrip' );
 		var $clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 
 		var pages = response.query.pages[ 0 ];
@@ -395,6 +398,8 @@ window.sdh.main = function () {
 		/**
 		 * Creates "clickies", simple link buttons.
 		 * Things are made nice per https://stackoverflow.com/a/10510353
+		 * Links are wrapped in spans to allow separators to be added using css
+		 * without becoming part of the link.
 		 * @param {string} msgName
 		 * @param {Function} func
 		 * @return {Object}
@@ -675,7 +680,7 @@ window.sdh.main = function () {
 		*/
 		var textInput = function () {
 			if ( actionField ) {
-				$description.hide( 0 );
+				$description.addClass( 'sdh-showdescrip-hidden' );
 				actionField.toggle();
 			} else {
 				mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets' ] ).then( function () {
@@ -702,7 +707,7 @@ window.sdh.main = function () {
 						'sdh-cancel',
 						function () {
 							actionField.toggle();
-							$description.show( 0 );
+							$description.removeClass( 'sdh-showdescrip-hidden' );
 						},
 						[ 'safe', 'destructive' ]
 					);
@@ -755,10 +760,10 @@ window.sdh.main = function () {
 
 					actionField = new OO.ui.ActionFieldLayout(
 						descriptionInput,
-						buttons, {
-							label: '', // For some dumb reason, the buttons won't align with the inputbox unless a dummy label is put
+						buttons,
+						{
 							align: 'top',
-							id: [ 'sdh-editbox' ]
+							id: 'sdh-editbox'
 						}
 					);
 
@@ -769,7 +774,7 @@ window.sdh.main = function () {
 					descriptionInput.on( 'enter', saveInput );
 
 					// Hide previous displayed clickies and add to DOM
-					$description.hide( 0 );
+					$description.addClass( 'sdh-showdescrip-hidden' );
 					$sdh.append( actionField.$element );
 				} );
 			}
@@ -811,12 +816,12 @@ window.sdh.main = function () {
 		var setProcessing = function () {
 			var x;
 			var $processing = $( '<div>' )
-				.addClass( 'sdh-processing' )
-				.css( 'margin-left', '0.5em' );
+				.addClass( 'sdh-processing' );
 			// Disable all clicky buttons
 			$clickies
-				.children( '.sdh-clicky a' )
-				.css( 'pointer-events', 'none' )
+				.children( '.sdh-clicky' )
+				.addClass( 'sdh-clicky-disabled' )
+				.children( 'a' )
 				.off();
 
 			// Add processing ... animation
@@ -906,10 +911,12 @@ window.sdh.main = function () {
 				}
 			),
 			wikidataLink: $( '<span>' )
-				.addClass( 'sdh-clicky' )
+				.addClass( [
+					'sdh-clicky',
+					'sdh-wikidata-description'
+				] )
 				.append( $( '<a>' )
 					.attr( 'href', 'https://www.wikidata.org/wiki/Special:SetLabelDescriptionAliases/' + wgQid + '/' + language )
-					.addClass( 'sdh-wikidata-description' )
 					.text( mw.msg( 'sdh-wikidata-link-label' ) )
 				)
 		};

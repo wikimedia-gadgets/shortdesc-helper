@@ -8,19 +8,25 @@
  */
 /* v3.4.0 */
 
-/* Stylings for links to wikidata and missing description */
-.sdh-wikidata-description {
-	color: MediumVioletRed; /* Using MediumVioletRed rather than previous HotPink to meet WCAG AA */
-}
-
+/* Stylings for missing description and links to wikidata */
 .sdh-missing-description {
 	color: DarkRed; /* Using DarkRed rather than previous Red to meet WCAG AA */
 }
 
-/* Interestingly, Vector's stylesheet makes <a> elements without href have a pointer automatically
-** This is for other skins. */
+.sdh-wikidata-description a {
+	color: MediumVioletRed; /* Using MediumVioletRed rather than previous HotPink to meet WCAG AA */
+}
+
+/**
+ * Interestingly, Vector's stylesheet makes <a> elements without href have a pointer automatically
+ * This is for other skins.
+*/
 .sdh-clicky a {
 	cursor: pointer;
+}
+
+.sdh-clicky-disabled a {
+	pointer-events: none;
 }
 
 /* Brackets and seperators for clickies */
@@ -34,6 +40,11 @@
 
 .sdh-clickies::after {
 	content: ')';
+}
+
+/* Used to hide display of description when switching to editing box */
+.sdh-showdescrip-hidden {
+	display: none;
 }
 
 /* Styling for editing bar */
@@ -54,6 +65,7 @@
 
 .sdh-processing {
 	display: inline-block;
+	margin-left: 0.5em;
 }
 
 .sdh-processing-dot {

@@ -8,7 +8,6 @@
 		"OO": false
 	},
 	"rules": {
-		"one-var": "off",
-		"no-jquery/no-animate-toggle": "off"
+		"one-var": "off"
 	}
 }
