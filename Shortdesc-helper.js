@@ -712,6 +712,7 @@ window.sdh.main = function () {
 						[ 'safe', 'destructive' ]
 					);
 
+					// FIXME icon doesn't show up..
 					var settingsButton = new OO.ui.ButtonWidget( {
 						icon: 'settings',
 						framed: false,
