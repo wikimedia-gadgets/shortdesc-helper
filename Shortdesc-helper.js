@@ -87,7 +87,7 @@ window.sdh.initMessages = function () {
 		'sdh-summary-changing': 'Changing [[Wikipedia:Short description|short description]] from $1 to $2',
 		'sdh-summary-adding-custom': 'Adding custom [[Wikipedia:Short description|short description]]: $2',
 		'sdh-summary-importing-wikidata': 'Importing Wikidata [[Wikipedia:Short description|short description]]: $2',
-		'sdh-summary-adding-local': 'Adding local [[Wikipedia:Short description|short description]]: $2',
+		'sdh-summary-adding-local': 'Adding local [[Wikipedia:Short description|short description]]: $2, overriding Wikidata description $1',
 		'sdh-summary-adding': 'Adding [[Wikipedia:Short description|short description]]: $2',
 		/* Failure message */
 		'sdh-edit-failed': 'Saving the addition of or edit to the short description failed.',
