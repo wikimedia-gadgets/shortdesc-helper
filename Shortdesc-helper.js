@@ -111,6 +111,11 @@ window.sdh.main = function () {
 	 * @type {string}
 	*/
 	var SDELEMENT = '.shortdescription';
+
+	/**
+	 * Selector to find disambiguation template.
+	 * @type {string}
+	 */
 	var DISAMBIGELEMENT = '#disambigbox';
 
 	/**
@@ -131,6 +136,7 @@ window.sdh.main = function () {
 	/**
 	 * Search pattern for finding short description in wikitext.
  	 * Group 1 in the regex is the short description.
+	 * @type {RegExp}
 	*/
 	var PATTERN = /\{\{[Ss]hort description\|(.*?)\}\}/;
 
