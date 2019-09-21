@@ -1,0 +1,23 @@
+{
+  "name": "shortdesc-helper",
+  "version": "1.0.0",
+  "description": "Gadget on the English Wikipedia - see [User:Galobtter/Shortdesc helper](https://en.wikipedia.org/wiki/User:Galobtter/Shortdesc_helper)",
+  "main": "Shortdesc-helper.js",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint-config-wikimedia": "^0.14.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/galobtter/shortdesc-helper.git"
+  },
+  "author": "Galobtter",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/galobtter/shortdesc-helper/issues"
+  },
+  "homepage": "https://github.com/galobtter/shortdesc-helper#readme"
+}
