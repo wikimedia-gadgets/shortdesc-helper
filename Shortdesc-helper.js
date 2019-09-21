@@ -112,12 +112,21 @@ window.sdh.main = function () {
 	 */
 	var section;
 
+	/**
+	 * Whether this is a disambiguation/set index page or not, to be determined later
+	 * by searching the DOM. If it is, then the option to override the short description
+	 * will be disabled.
+	 * @type {boolean}
+	 */
+	var disambigPage = false;
+
 	// Consts
 	/**
 	 * Selector to find the short description in the DOM.
 	 * @type {string}
 	*/
 	var SDELEMENT = '.shortdescription';
+	var DISAMBIGELEMENT = '.dmbox';
 
 	/**
 	 * Search pattern for finding short description in wikitext.
@@ -197,7 +206,11 @@ window.sdh.main = function () {
 		if ( onlyEditWikidata ) {
 			return;
 		}
-		// FIXME, should be doing this on wikipage.content hook/or after $.ready
+		if ( $( DISAMBIGELEMENT ).length > 0 ) {
+			disambigPage = true;
+			return;
+		}
+		// FIXME: should be doing this on wikipage.content hook or after $.ready
 		if ( $( SDELEMENT ).length > 0 ) {
 			/**
 			 * Find whether the short description is in the first section, to determine
@@ -584,7 +597,7 @@ window.sdh.main = function () {
 					quotify( pageDescription ),
 					quotify( newDescription )
 				).plain() +
-				mw.message( 'sdh-summary-append' ).plain();
+					mw.message( 'sdh-summary-append' ).plain();
 				API.postWithEditToken( {
 					action: 'edit',
 					section: section,
@@ -596,7 +609,7 @@ window.sdh.main = function () {
 					minor: options.MarkAsMinor
 				} ).then(
 					function () {
-					// Reload the page
+						// Reload the page
 						window.location.reload();
 					},
 					function () {
@@ -712,7 +725,7 @@ window.sdh.main = function () {
 						[ 'safe', 'destructive' ]
 					);
 
-					// FIXME icon doesn't show up..
+					// FIXME: icon doesn't show up
 					var settingsButton = new OO.ui.ButtonWidget( {
 						icon: 'settings',
 						framed: false,
@@ -845,6 +858,9 @@ window.sdh.main = function () {
 		 * elements that could make up the initial display.
 		*/
 		var texts = {
+			disambig: $( '<span>' )
+				.addClass( 'sdh-disambiguation-page' )
+				.text( mw.msg( 'sdh-disambiguation-page ' ) ),
 			noDescription: $( '<span>' )
 				.addClass( 'sdh-no-description' )
 				.text( mw.msg( 'sdh-no-description' ) ),
@@ -1014,8 +1030,12 @@ window.sdh.main = function () {
 						if ( descriptionFromText ) {
 							clickyElements.push( clickies.edit );
 						} else {
-							clickyElements.push( clickies.override );
-							popupElement = popups.override;
+							if ( disambigPage ) {
+								popupElement = popups.disambig;
+							} else {
+								clickyElements.push( clickies.override );
+								popupElement = popups.override;
+							}
 						}
 					} else {
 						clickyElements.push(
@@ -1058,9 +1078,6 @@ if (
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
 	/**
-	 * TODO: Post edit hook fires too early - if adding short description using VE,
-	 * won't show right description (very very edge case though - minor thing).
-	 * Needs more testing too.
 	 * Fire on postEdit hook to load after Visual Editor saves,
 	 * as VE does not actually reload the page.
 	 * Unfortunately, postEdit fires both after regular edits and VE edits,
@@ -1068,6 +1085,8 @@ if (
 	 * on postEdit.
 	 * window.sdh.hasRun is set to true below, and will be undefined after a proper reload,
 	 * but not after a dynamic VE reload.
+	 * FIXME: Post edit hook fires too early, meaning if an editor adds a short description using VE
+	 * it won't show the right description.
 	*/
 	mw.hook( 'postEdit' ).add( function () {
 		if ( window.sdh.hasRun ) {
