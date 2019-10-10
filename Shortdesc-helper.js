@@ -1094,7 +1094,9 @@ if (
 			window.sdh.main();
 		}
 	} );
-	window.sdh.hasRun = true;
-	window.sdh.initMessages();
-	window.sdh.main();
+	if ( !window.sdh.hasRun ) { // Don't run twice
+		window.sdh.hasRun = true;
+		window.sdh.initMessages();
+		window.sdh.main();
+	}
 }
