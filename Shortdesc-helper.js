@@ -7,7 +7,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.5
+ * Shortdesc helper: v3.4.6
  * Documentation at en.wikipedia.org/wiki/User:Galobtter/Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
