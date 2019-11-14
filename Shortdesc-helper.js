@@ -7,7 +7,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.6
+ * Shortdesc helper: v3.4.7
  * Documentation at en.wikipedia.org/wiki/User:Galobtter/Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -1079,6 +1079,8 @@ if (
 	mw.config.get( 'wgArticleId' ) !== 0
 ) {
 	/**
+	 * Commented out due to issues reported at
+	 * [[Special:PermaLink/925885151#Doubled_short_descriptions_from_Template:Infobox_settlement]].
 	 * Fire on postEdit hook to load after Visual Editor saves,
 	 * as VE does not actually reload the page.
 	 * Unfortunately, postEdit fires both after regular edits and VE edits,
@@ -1088,15 +1090,19 @@ if (
 	 * but not after a dynamic VE reload.
 	 * FIXME: Post edit hook fires too early, meaning if an editor adds a short description using VE
 	 * it won't show the right description.
-	*/
+
 	mw.hook( 'postEdit' ).add( function () {
 		if ( window.sdh.hasRun ) {
 			window.sdh.main();
 		}
 	} );
+
 	if ( !window.sdh.hasRun ) { // Don't run twice
 		window.sdh.hasRun = true;
 		window.sdh.initMessages();
 		window.sdh.main();
 	}
+	*/
+	window.sdh.initMessages();
+	window.sdh.main();
 }
