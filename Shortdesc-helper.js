@@ -1107,3 +1107,4 @@ if (
 	window.sdh.initMessages();
 	window.sdh.main();
 }
+// </nowiki>
