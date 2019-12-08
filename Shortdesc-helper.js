@@ -169,7 +169,7 @@ window.sdh.main = function () {
 	var APIoptions = {
 		ajax: {
 			headers: {
-				'Api-User-Agent': 'Short description editer/viewer gadget (Wikipedia:Shortdesc helper)'
+				'Api-User-Agent': 'Short description editer/viewer gadget (w:en:Wikipedia:Shortdesc helper)'
 			}
 		}
 	};
