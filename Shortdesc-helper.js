@@ -7,7 +7,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.9
+ * Shortdesc helper: v3.4.10
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -25,6 +25,16 @@ window.sdh = window.sdh || {};
 window.sdh.initMessages = function () {
 	/* These messages are used on all wikis and so need translation. */
 	var messages = {
+		/** Uncomment the following to change messages used in settings dialog */
+		/**
+		"libSettings-settings-title": "Settings",
+		"libSettings-save-label": "Save settings",
+		"libSettings-cancel-label": "Cancel",
+		"libSettings-showDefaults-label": "Show defaults",
+		"libSettings-showCurrentSettings-label": "Show current settings",
+		"libSettings-save-success-message": "Settings for $1 successfully saved.",
+		"libSettings-save-fail-message": "Could not save settings for $1.",
+		*/
 		/* Settings messages */
 		'sdh-settingsDialog-title': 'Settings for Shortdesc helper',
 		'sdh-header-general': 'General',
@@ -41,6 +51,7 @@ window.sdh.initMessages = function () {
 		'sdh-edit-label': 'Edit',
 		'sdh-edit-title': 'Edit short description',
 		/* Editing messages */
+		'sdh-placeholder': 'Short description',
 		'sdh-save-label': 'Save',
 		'sdh-save-title': 'Save description',
 		'sdh-cancel-label': 'Cancel',
@@ -728,7 +739,7 @@ window.sdh.main = function () {
 						id: [ 'sdh-inputbox' ],
 						label: '0',
 						value: emptyPreload ? '' : pageDescription,
-						placeholder: 'Short description'
+						placeholder: mw.msg( 'sdh-placeholder' )
 					} );
 
 					var saveButton = new OOuiClicky(
