@@ -7,7 +7,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.11
+ * Shortdesc helper: v3.4.12
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -299,7 +299,7 @@ window.sdh.main = function () {
 						defaultValue: 'add',
 						values: [
 							{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
-							{ data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
+							// { data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) }, // Option for all disabled due to issues with people not using it properly
 							{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
 						],
 						hide: onlyEditWikidata
@@ -676,7 +676,7 @@ window.sdh.main = function () {
 			// Make edits to Wikidata as appropiate
 			if (
 				wgQid &&
-				( options.SaveWikidata === 'all' || options.SaveWikidata === 'add' && addWikidata ) &&
+				( options.SaveWikidata === 'add' && addWikidata ) && // options.SaveWikidata === 'all'
 				newDescription !== ''
 			) {
 				setWikidataDescription( newDescription );
