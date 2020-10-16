@@ -1,3 +1,4 @@
+// <nowiki>
 /*  _____________________________________________________________________________
  * |                                                                             |
  * |                    === WARNING: GLOBAL GADGET FILE ===                      |
@@ -7,13 +8,12 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.12
+ * Shortdesc helper: v3.4.13
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
  * and easier editing of them by giving buttons and inputbox for doing so.
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ.
- * <nowiki>
 */
 'use strict';
 window.sdh = window.sdh || {};
@@ -76,6 +76,10 @@ window.sdh.initMessages = function () {
 		'sdh-SaveWikidata-add-label': 'Only when no Wikidata description exists (default)',
 		'sdh-SaveWikidata-all-label': 'On all edits',
 		'sdh-SaveWikidata-never-label': 'Never',
+		'sdh-ShowWikidataOption-label': 'Show the Wikidata description',
+		'sdh-ShowWikidataOption-always-label': 'Always',
+		'sdh-ShowWikidataOption-nolocal-label': 'Only when no local description exists (default)',
+		'sdh-ShowWikidataOption-never-label': 'Never',
 		'sdh-ExportButton-label': 'Add a button, "export", to update the Wikidata description to match the local description.',
 		/* Initial view messages */
 		'sdh-wikidata-link-label': 'Wikidata',
@@ -197,6 +201,8 @@ window.sdh.main = function () {
 
 	var API = new mw.Api( APIoptions );
 
+	var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php', APIoptions );
+
 	/**
 	 * Get the wikitext of the page.
 	 * @return {Promise}
@@ -250,7 +256,7 @@ window.sdh.main = function () {
 	}() );
 
 	/**
-	 * Get the short description
+	 * Get the local short description
 	 * @type {Promise}
 	 */
 	var callPromiseDescription = API.get( {
@@ -258,6 +264,19 @@ window.sdh.main = function () {
 		titles: title,
 		prop: 'description',
 		formatversion: 2
+	} );
+
+	/**
+	 * Get the Wikidata short description
+	 * @type {Promise}
+	 */
+	var callPromiseWDDescription = wikidataAPI.get( {
+		action: 'wbgetentities',
+		sites: DBName,
+		titles: title,
+		props: 'descriptions',
+		formatversion: 2,
+		languages: language
 	} );
 
 	/**
@@ -290,6 +309,17 @@ window.sdh.main = function () {
 						name: 'ExportButton',
 						label: mw.msg( 'sdh-ExportButton-label' ),
 						defaultValue: false,
+						hide: onlyEditWikidata
+					} ),
+					new ls.DropdownOption( {
+						name: 'ShowWikidata',
+						label: mw.msg( 'sdh-ShowWikidataOption-label' ),
+						defaultValue: 'nolocal',
+						values: [
+							{ data: 'always', label: mw.msg( 'sdh-ShowWikidataOption-always-label' ) },
+							{ data: 'nolocal', label: mw.msg( 'sdh-ShowWikidataOption-nolocal-label' ) },
+							{ data: 'never', label: mw.msg( 'sdh-ShowWikidataOption-never-label' ) }
+						],
 						hide: onlyEditWikidata
 					} ),
 					new ls.DropdownOption( {
@@ -349,7 +379,8 @@ window.sdh.main = function () {
 			InputWidth: 35,
 			FontSize: 100,
 			ExportButton: false,
-			SaveWikidata: 'add'
+			SaveWikidata: 'add',
+			ShowWikidata: 'nolocal'
 		};
 	}
 
@@ -359,8 +390,8 @@ window.sdh.main = function () {
 		'#sdh-editbox, #sdh-inputbox { max-width:' + options.InputWidth + 'em };'
 	);
 
-	/* Execute main code once the short description is gotten */
-	callPromiseDescription.then( function ( response ) {
+	/* Execute main code once both the local and Wikidata short description is gotten */
+	$.when(callPromiseDescription, callPromiseWDDescription).then( function ( response, responseWD ) {
 		/**
 		 * These two variables are UI elements that need to be closed and reopened,
 		 * and so need to be accessed outside the scope of the functions
@@ -566,7 +597,6 @@ window.sdh.main = function () {
 		 */
 		var setWikidataDescription = function ( newDescription ) {
 			return mw.loader.using( 'mediawiki.ForeignApi' ).then( function () {
-				var wikidataAPI = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php', APIoptions );
 				return wikidataAPI.postWithToken( 'csrf', {
 					action: 'wbsetdescription',
 					id: wgQid,
