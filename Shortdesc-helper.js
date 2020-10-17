@@ -267,19 +267,6 @@ window.sdh.main = function () {
 	} );
 
 	/**
-	 * Get the Wikidata short description
-	 * @type {Promise}
-	 */
-	var callPromiseWDDescription = wikidataAPI.get( {
-		action: 'wbgetentities',
-		sites: DBName,
-		titles: title,
-		props: 'descriptions',
-		formatversion: 2,
-		languages: language
-	} );
-
-	/**
 	 * Load settings using libSettings if it exists
 	 * Otherwise gracefully fallback to defaults.
 	 */
@@ -366,7 +353,7 @@ window.sdh.main = function () {
 			scriptName: 'Shortdesc-helper',
 			helpInline: true,
 			size: 'large',
-			height: 300,
+			height: 350,
 			optionsConfig: optionsConfig
 		} );
 
@@ -383,6 +370,18 @@ window.sdh.main = function () {
 			ShowWikidata: 'nolocal'
 		};
 	}
+
+	/**
+	 * Get the Wikidata short description
+	 * @type {Promise}
+	 */
+	var callPromiseWDDescription = options.ShowWikidata === 'never' ? null : wikidataAPI.get( {
+		action: 'wbgetentities',
+		ids: wgQid,
+		props: 'descriptions',
+		formatversion: 2,
+		languages: language
+	} );
 
 	// Dynamic CSS based on options
 	mw.util.addCSS(
@@ -441,25 +440,35 @@ window.sdh.main = function () {
 		var emptyPreload = false;
 
 		/**
-		 * Various HTML elements that make up
+		 * Various HTML elements
 		 */
 		var $sdh = $( '<div>' ).prop( 'id', 'sdh' );
 		var $description = $( '<div>' ).addClass( 'sdh-showdescrip' );
 		var $clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 
-		var pages = response.query.pages[ 0 ];
-
-		/**
-		 * The page short description.
-		 * @type {string}
-		 */
-		var pageDescription = pages.description;
+		var pages = response[0].query.pages[ 0 ];
 
 		/**
 		 * Is the description from Wikidata (non local) or the {{SHORTDESC:}} magic word?
 		 * @type {boolean}
 		 */
 		var isLocal = ( pages.descriptionsource === 'local' );
+
+		/** 
+		 * The Wikidata descriptions.
+		*/
+		var wikidataDescriptions = responseWD ? responseWD[0].entities[wgQid].descriptions: null;
+
+		/**
+		 * The Wikidata description, if it exists.
+		 */
+		var wikidataDescription = Object.keys(wikidataDescriptions).length !== 0 ? wikidataDescriptions[language]['value'] : '';
+
+		/**
+		 * The page short description.
+		 * @type {string}
+		 */
+		var pageDescription = (isLocal ? pages.description: wikidataDescription);
 
 		/**
 	 	 * Whether this is a disambiguation/set index page or not, determined by searching the DOM.
@@ -473,6 +482,12 @@ window.sdh.main = function () {
 		 * @type {boolean}
 		 */
 		var uselessDescription = !isLocal && USELESS_DESCRIPTIONS.indexOf( pageDescription ) !== -1;
+
+		/**
+		 * Whether to append the Wikidata description
+		 * @type {boolean}
+		 */
+		var appendWDDescription = options.ShowWikidata === 'always' && isLocal && wikidataDescription;
 
 		/**
 		 * Creates "clickies", simple link buttons.
@@ -929,7 +944,8 @@ window.sdh.main = function () {
 				.html( mw.msg( 'sdh-missing-description', ( isRedirect ? 'redirect' : 'article' ) ) ),
 			pageDescription: $( '<span>' )
 				.addClass( 'mw-page-description ' )
-				.text( pageDescription )
+				.text( pageDescription + ( appendWDDescription ?
+					(' (Wikidata: ' + wikidataDescription + ')' ) : '' ) )
 		};
 
 		var clickies = {
