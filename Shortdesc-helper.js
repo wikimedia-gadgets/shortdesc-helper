@@ -454,7 +454,7 @@ window.sdh.main = function () {
 		 */
 		var isLocal = ( pages.descriptionsource === 'local' );
 
-		/** 
+		/**
 		 * The Wikidata descriptions.
 		*/
 		var wikidataDescriptions = responseWD ? responseWD[0].entities[wgQid].descriptions: {};
