@@ -457,7 +457,7 @@ window.sdh.main = function () {
 		/** 
 		 * The Wikidata descriptions.
 		*/
-		var wikidataDescriptions = responseWD ? responseWD[0].entities[wgQid].descriptions: null;
+		var wikidataDescriptions = responseWD ? responseWD[0].entities[wgQid].descriptions: {};
 
 		/**
 		 * The Wikidata description, if it exists.
