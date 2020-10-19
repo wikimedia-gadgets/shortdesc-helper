@@ -8,7 +8,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.13
+ * Shortdesc helper: v3.4.14
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -375,7 +375,7 @@ window.sdh.main = function () {
 	 * Get the Wikidata short description
 	 * @type {Promise}
 	 */
-	var callPromiseWDDescription = options.ShowWikidata === 'never' ? null : wikidataAPI.get( {
+	var callPromiseWDDescription = (options.ShowWikidata === 'never' || wgQid === null) ? null : wikidataAPI.get( {
 		action: 'wbgetentities',
 		ids: wgQid,
 		props: 'descriptions',
