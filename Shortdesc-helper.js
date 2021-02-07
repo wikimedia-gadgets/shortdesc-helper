@@ -8,7 +8,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.14
+ * Shortdesc helper: v3.4.15
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -148,7 +148,7 @@ window.sdh.main = function () {
  	 * Group 1 in the regex is the short description.
 	 * @type {RegExp}
 	*/
-	var PATTERN = /\{\{[Ss]hort description\|(.*?)\}\}/;
+	var PATTERN = /\{\{\s*[Ss]hort description\|(.*?)\}\}/;
 
 	/**
 	 * List of Wikidata descriptions that are not useful enough to be directly imported.
@@ -157,6 +157,18 @@ window.sdh.main = function () {
 	var USELESS_DESCRIPTIONS = [
 		'Wikimedia project page'
 	];
+
+	/**
+	 * Pattern for date spans, to replace hyphen with en dash.
+	 * @type {RegExp}
+	 */
+	var DATEPATTERN = /(\d{4})-(\d{4})/;
+
+	/**
+	 * Replace for date spans.
+	 * @type {String}
+	 */
+	var DATEREPLACEMENT = "$1–$2";
 
 	// Config variables
 	var title = mw.config.get( 'wgPageName' );
@@ -718,6 +730,9 @@ window.sdh.main = function () {
 				}
 			};
 
+			// Replace hyphens in dates with en dashes
+			newDescription = newDescription.replace(DATEPATTERN, DATEREPLACEMENT);
+
 			// Make edits to Wikidata as appropiate
 			if (
 				wgQid &&
@@ -739,7 +754,7 @@ window.sdh.main = function () {
 				newDescription = 'none';
 			}
 
-			replacement = '{{short description|' + newDescription + '}}';
+			replacement = '{{Short description|' + newDescription + '}}';
 
 			/**
 			 * change = true means there was a previous short description in the wikitext
@@ -752,7 +767,7 @@ window.sdh.main = function () {
 				 */
 				getText().then( function ( result ) {
 					if ( !replaceAndEdit( result ) ) {
-						editFailed( 'sdh-edit-failed' );
+						editFailed( 'sdh-edit-failed-no-template' );
 					}
 				} );
 			} else {
