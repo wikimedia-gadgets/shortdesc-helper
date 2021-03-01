@@ -1077,10 +1077,16 @@ window.sdh.main = function () {
 			var clickyElements = [];
 
 			/**
-			 * what clickable popup explanation is there if any
+			 * What clickable popup explanation is there if any
 			 * @type {InfoClickyPopup}
 			 */
 			var popupElement;
+
+			/**
+			 * Whether the description is none
+			 * @type {boolean}
+			 */
+			var isNone;
 
 			// Whether to show "Missing article description" if applicable
 			var showMissing = (
@@ -1107,12 +1113,17 @@ window.sdh.main = function () {
 			 */
 			descriptionFromText = shortdescInText( wikitextResult )[ 1 ];
 
+			/**
+			 * Determine if the description is none.
+			 */
+			isNone = descriptionFromText && descriptionFromText.toLowerCase() === 'none';
+
 			// Show wikidata link at beginning if displaying non-local description.
 			if ( pageDescription && !isLocal ) {
 				clickyElements.push( clickies.wikidataLink );
 			}
 			
-			if ( descriptionFromText && descriptionFromText.toLowerCase() === 'none' ) {
+			if ( isNone ) {
 				// Handle {{Short description|none}}
 				textElement = texts.noDescription;
 				clickyElements.push( clickies.addNone );
@@ -1156,7 +1167,7 @@ window.sdh.main = function () {
 				clickyElements = [];
 			}
 
-			if ( isLocal && options.ExportButton ) {
+			if ( isLocal && !isNone && options.ExportButton ) {
 				clickyElements.push( clickies.export );
 			}
 
