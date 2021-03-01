@@ -667,7 +667,7 @@ window.sdh.main = function () {
 			 * @return {string}
 			 */
 			var quotify = function ( text ) {
-				if ( text === '' || text === 'none' ) {
+				if ( text === '' || text.toLowerCase() === 'none' ) {
 					return 'none';
 				} else {
 					return '"' + text + '"';
@@ -1112,7 +1112,7 @@ window.sdh.main = function () {
 				clickyElements.push( clickies.wikidataLink );
 			}
 			
-			if ( descriptionFromText === 'none' ) {
+			if ( descriptionFromText && descriptionFromText.toLowerCase() === 'none' ) {
 				// Handle {{Short description|none}}
 				textElement = texts.noDescription;
 				clickyElements.push( clickies.addNone );
