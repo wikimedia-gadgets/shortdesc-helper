@@ -8,7 +8,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.16
+ * Shortdesc helper: v3.4.17
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -145,7 +145,7 @@ window.sdh.main = function () {
 
 	/**
 	 * Search pattern for finding short description in wikitext.
- 	 * Group 1 in the regex is the short description.
+	 * Group 1 in the regex is the short description.
 	 * @type {RegExp}
 	*/
 	var PATTERN = /\{\{\s*[Ss]hort description\|(.*?)\}\}/;
@@ -475,13 +475,13 @@ window.sdh.main = function () {
 		 * The page short description.
 		 * @type {string}
 		 */
-		var pageDescription = (isLocal ? pages.description: wikidataDescription);
+		var pageDescription = (isLocal ? pages.description: wikidataDescription).trim();
 
 		/**
-	 	 * Whether this is a disambiguation/set index page or not, determined by searching the DOM.
-	 	 * If it is, then the option to override the short description will be disabled.
-	 	 * @type {boolean}
-	 	*/
+		 * Whether this is a disambiguation/set index page or not, determined by searching the DOM.
+		 * If it is, then the option to override the short description will be disabled.
+		 * @type {boolean}
+		*/
 		var disambigPage = $( DISAMBIGELEMENT ).length > 0;
 
 		/**
@@ -579,7 +579,7 @@ window.sdh.main = function () {
 
 		/**
 		 * Function to check if the short description is in the wikitext.
- 		 * If it is, return the wikitext and short description as defined in the text
+		 * If it is, return the wikitext and short description as defined in the text
 		 * @param {Object} wikitextResult
 		 * @return {Array}
 		 */
@@ -778,7 +778,7 @@ window.sdh.main = function () {
 		/**
 		 * Creates input box with save and cancel buttons.
 		 * If input box was created before, show it again.
-	 	 * Otherwise, create the input box using OOui.
+		 * Otherwise, create the input box using OOui.
 		*/
 		var textInput = function () {
 			if ( actionField ) {
@@ -824,10 +824,19 @@ window.sdh.main = function () {
 						settings.display();
 					} );
 
-					// On change, update character count label.
+					/**
+					 * On change, update character count label.
+					 * If local description has not been modified, prevent
+					 */
 					var updateOnChange = function () {
+						var description = descriptionInput.getValue().trim();
 						length = descriptionInput.getInputLength();
 						descriptionInput.setLabel( String( length ) );
+						if (isLocal && description === pageDescription) {
+							saveButton.setDisabled( true );
+						} else {
+							saveButton.setDisabled( false );
+						}
 					};
 
 					var items = [ saveButton, cancelButton ];
