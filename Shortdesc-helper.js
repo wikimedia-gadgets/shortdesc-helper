@@ -83,7 +83,7 @@ window.sdh.initMessages = function () {
 		'sdh-ExportButton-label': 'Add a button, "export", to update the Wikidata description to match the local description.',
 		/* Initial view messages */
 		'sdh-wikidata-link-label': 'Wikidata',
-		'sdh-no-description': 'This page has deliberately no description.',
+		'sdh-no-description': 'This page intentionally has no description.',
 		/* Initial view buttons */
 		'sdh-infoClicky-label': '?',
 		'sdh-infoClicky-title': 'Click for info',
@@ -1099,8 +1099,8 @@ window.sdh.main = function () {
 
 			// Whether to show "Missing article description" if applicable
 			var showMissing = (
-				namespace === 0 &&
-				( !isRedirect || ( isRedirect && options.AddToRedirect ) )
+				( namespace === 0 || namespace === 118 ) &&
+				( !isRedirect || options.AddToRedirect )
 			);
 
 			// If not enwiki, complete logic for non-enwiki case and exit.
