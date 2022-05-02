@@ -8,33 +8,23 @@
  *
  */
 /**
- * Shortdesc helper: v3.4.17
+ * Shortdesc helper: v3.5.0
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
  * and easier editing of them by giving buttons and inputbox for doing so.
  * Forked from [[MediaWiki:Gadget-Page descriptions.js]] written by the TheDJ.
-*/
+ */
 'use strict';
 window.sdh = window.sdh || {};
 
 /**
  * Set messages using mw.message.
  * window.sdh.messages can be used to override these messages (for e.g translations).
-*/
+ */
 window.sdh.initMessages = function () {
 	/* These messages are used on all wikis and so need translation. */
 	var messages = {
-		/** Uncomment the following to change messages used in settings dialog */
-		/**
-		"libSettings-settings-title": "Settings",
-		"libSettings-save-label": "Save settings",
-		"libSettings-cancel-label": "Cancel",
-		"libSettings-showDefaults-label": "Show defaults",
-		"libSettings-showCurrentSettings-label": "Show current settings",
-		"libSettings-save-success-message": "Settings for $1 successfully saved.",
-		"libSettings-save-fail-message": "Could not save settings for $1.",
-		*/
 		/* Settings messages */
 		'sdh-settingsDialog-title': 'Settings for Shortdesc helper',
 		'sdh-header-general': 'General',
@@ -126,6 +116,7 @@ window.sdh.main = function () {
 	 * What section the short description is in, to be determined later
 	 * by searching the DOM. Used so that if the short description is in the lead
 	 * only the wikitext of section 0 needs to be downloaded.
+	 *
 	 * @type {number}
 	 */
 	var section;
@@ -133,12 +124,14 @@ window.sdh.main = function () {
 	// Consts
 	/**
 	 * Selector to find the short description in the DOM.
+	 *
 	 * @type {string}
-	*/
+	 */
 	var SDELEMENT = '.shortdescription';
 
 	/**
 	 * Selector to find disambiguation template.
+	 *
 	 * @type {string}
 	 */
 	var DISAMBIGELEMENT = '#disambigbox';
@@ -146,12 +139,14 @@ window.sdh.main = function () {
 	/**
 	 * Search pattern for finding short description in wikitext.
 	 * Group 1 in the regex is the short description.
+	 *
 	 * @type {RegExp}
-	*/
+	 */
 	var PATTERN = /\{\{\s*[Ss]hort description\|(.*?)\}\}/;
 
 	/**
 	 * List of Wikidata descriptions that are not useful enough to be directly imported.
+	 *
 	 * @type {Array}
 	 */
 	var USELESS_DESCRIPTIONS = [
@@ -160,15 +155,17 @@ window.sdh.main = function () {
 
 	/**
 	 * Pattern for date spans, to replace hyphen with en dash.
+	 *
 	 * @type {RegExp}
 	 */
 	var DATEPATTERN = /(\d{4})-(\d{4})/;
 
 	/**
 	 * Replace for date spans.
-	 * @type {String}
+	 *
+	 * @type {string}
 	 */
-	var DATEREPLACEMENT = "$1–$2";
+	var DATEREPLACEMENT = '$1–$2';
 
 	// Config variables
 	var title = mw.config.get( 'wgPageName' );
@@ -186,13 +183,15 @@ window.sdh.main = function () {
 	 * (currently, this is only the case on enwiki).
 	 * This flag modifies the behaviour of various methods to display the appropriate buttons and
 	 * settings, and make the description saved to the right place.
+	 *
 	 * @type {boolean}
-	*/
+	 */
 	var onlyEditWikidata = ( DBName !== 'enwiki' );
 
 	/**
 	 * Check if the user can edit the page,
 	 * and disallow editing of templates and categories to prevent accidental addition.
+	 *
 	 * @type {boolean}
 	 */
 	var allowEditing = (
@@ -217,6 +216,7 @@ window.sdh.main = function () {
 
 	/**
 	 * Get the wikitext of the page.
+	 *
 	 * @return {Promise}
 	 */
 	var getText = function () {
@@ -234,6 +234,7 @@ window.sdh.main = function () {
 	/**
 	 * Download wikitext. Whether to download the whole wikitext,
 	 * or only the lead section wikitext is determined.
+	 *
 	 * @type {Promise}
 	 */
 	var callPromiseText = ( function () {
@@ -247,7 +248,7 @@ window.sdh.main = function () {
 		 * if we need to download the wikitext of the entire page.
 		 * Do this by searching elements above the first heading for ".shortdescription"
 		 */
-		// eslint-disable-next-line no-jquery/no-global-selector
+		// eslint-disable-next-line no-jquery/no-global-selector, no-jquery/variable-pattern
 		elements = $( '.mw-parser-output > h2' ).first().prevAll();
 		/**
 		 * Need to check sibling elements with filter and their children
@@ -264,6 +265,7 @@ window.sdh.main = function () {
 
 	/**
 	 * Get the local short description
+	 *
 	 * @type {Promise}
 	 */
 	var callPromiseDescription = API.get( {
@@ -316,6 +318,7 @@ window.sdh.main = function () {
 						],
 						hide: onlyEditWikidata
 					} ),
+					// Option for all disabled due to issues with people not using it properly
 					new ls.DropdownOption( {
 						name: 'SaveWikidata',
 						label: mw.msg( 'sdh-SaveWikidata-label' ),
@@ -323,7 +326,7 @@ window.sdh.main = function () {
 						defaultValue: 'add',
 						values: [
 							{ data: 'add', label: mw.msg( 'sdh-SaveWikidata-add-label' ) },
-							// { data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) }, // Option for all disabled due to issues with people not using it properly
+							// { data: 'all', label: mw.msg( 'sdh-SaveWikidata-all-label' ) },
 							{ data: 'never', label: mw.msg( 'sdh-SaveWikidata-never-label' ) }
 						],
 						hide: onlyEditWikidata
@@ -380,9 +383,10 @@ window.sdh.main = function () {
 
 	/**
 	 * Get the Wikidata short description
+	 *
 	 * @type {Promise}
 	 */
-	var callPromiseWDDescription = (options.ShowWikidata === 'never' || wgQid === null) ? null : wikidataAPI.get( {
+	var callPromiseWDDescription = ( options.ShowWikidata === 'never' || wgQid === null ) ? null : wikidataAPI.get( {
 		action: 'wbgetentities',
 		ids: wgQid,
 		props: 'descriptions',
@@ -396,8 +400,8 @@ window.sdh.main = function () {
 		'#sdh-editbox, #sdh-inputbox { max-width:' + options.InputWidth + 'em };'
 	);
 
-	/* Execute main code once both the local and Wikidata short description is gotten */
-	$.when(callPromiseDescription, callPromiseWDDescription).then( function ( response, responseWD ) {
+	/* Main code to be run once both the local and Wikidata short description is gotten */
+	var onResponses = function ( response, responseWD ) {
 		/**
 		 * These two variables are UI elements that need to be closed and reopened,
 		 * and so need to be accessed outside the scope of the functions
@@ -406,12 +410,14 @@ window.sdh.main = function () {
 
 		/**
 		 * Used in InfoClickyPopup
+		 *
 		 * @type {OO.ui.PopupWidget}
 		 */
 		var infoPopup;
 
 		/**
 		 * Used in textInput
+		 *
 		 * @type {OO.ui.ActionFieldLayout}
 		 */
 		var actionField;
@@ -422,6 +428,7 @@ window.sdh.main = function () {
 
 		/**
 		 * The message to be used for the summary
+		 *
 		 * @type {string}
 		 */
 		var summaryMsg;
@@ -429,6 +436,7 @@ window.sdh.main = function () {
 		/**
 		 * Is the action a change to an existing local description
 		 * or an addition, importation etc.
+		 *
 		 * @type {boolean}
 		 */
 		var change;
@@ -436,12 +444,14 @@ window.sdh.main = function () {
 		/**
 		 * True when there is no description anywhere, and so
 		 * description should be added to Wikidata when options.SaveWikidata is 'add'.
+		 *
 		 * @type {boolean}
 		 */
 		var addWikidata;
 
 		/**
 		 * Whether there should be text initially in the input box.
+		 *
 		 * @type {boolean}
 		 */
 		var emptyPreload = false;
@@ -453,45 +463,50 @@ window.sdh.main = function () {
 		var $description = $( '<div>' ).addClass( 'sdh-showdescrip' );
 		var $clickies = $( '<span>' ).addClass( 'sdh-clickies' );
 
-		var pages = response[0].query.pages[ 0 ];
+		var pages = response[ 0 ].query.pages[ 0 ];
 
 		/**
 		 * Is the description from Wikidata (non local) or the {{SHORTDESC:}} magic word?
+		 *
 		 * @type {boolean}
 		 */
 		var isLocal = ( pages.descriptionsource === 'local' );
 
 		/**
 		 * The Wikidata descriptions.
-		*/
-		var wikidataDescriptions = responseWD ? responseWD[0].entities[wgQid].descriptions: {};
+		 */
+		var wikidataDescriptions = responseWD ? responseWD[ 0 ].entities[ wgQid ].descriptions : {};
 
 		/**
 		 * The Wikidata description, if it exists.
 		 */
-		var wikidataDescription = Object.keys(wikidataDescriptions).length !== 0 ? wikidataDescriptions[language]['value'] : '';
+		var wikidataDescription = Object.keys( wikidataDescriptions ).length !== 0 ? wikidataDescriptions[ language ].value : '';
 
 		/**
 		 * The page short description.
+		 *
 		 * @type {string}
 		 */
-		var pageDescription = (isLocal ? pages.description: wikidataDescription).trim();
+		var pageDescription = ( isLocal ? pages.description : wikidataDescription ).trim();
 
 		/**
 		 * Whether this is a disambiguation/set index page or not, determined by searching the DOM.
 		 * If it is, then the option to override the short description will be disabled.
+		 *
 		 * @type {boolean}
-		*/
+		 */
 		var disambigPage = $( DISAMBIGELEMENT ).length > 0;
 
 		/**
 		 * Whether a Wikidata description is too generic to be useful.
+		 *
 		 * @type {boolean}
 		 */
 		var uselessDescription = !isLocal && USELESS_DESCRIPTIONS.indexOf( pageDescription ) !== -1;
 
 		/**
 		 * Whether to append the Wikidata description
+		 *
 		 * @type {boolean}
 		 */
 		var appendWDDescription = options.ShowWikidata === 'always' && isLocal && wikidataDescription;
@@ -501,6 +516,7 @@ window.sdh.main = function () {
 		 * Things are made nice per https://stackoverflow.com/a/10510353
 		 * Links are wrapped in spans to allow separators to be added using css
 		 * without becoming part of the link.
+		 *
 		 * @param {string} msgName
 		 * @param {Function} func
 		 * @return {Object}
@@ -527,6 +543,7 @@ window.sdh.main = function () {
 
 		/**
 		 * Create a Clicky that opens a OOui PopupWidget.
+		 *
 		 * @param {string} text
 		 * @return {Clicky}
 		 */
@@ -561,6 +578,7 @@ window.sdh.main = function () {
 
 		/**
 		 * Creates OOui buttons, which are used for save and cancel.
+		 *
 		 * @param {string} msgName
 		 * @param {Function} func
 		 * @param {Array<string>} flags
@@ -580,6 +598,7 @@ window.sdh.main = function () {
 		/**
 		 * Function to check if the short description is in the wikitext.
 		 * If it is, return the wikitext and short description as defined in the text
+		 *
 		 * @param {Object} wikitextResult
 		 * @return {Array}
 		 */
@@ -595,6 +614,7 @@ window.sdh.main = function () {
 
 		/**
 		 * Notify the user that the edit failed and log any debug info.
+		 *
 		 * @param {string} msgName
 		 * @param {*} debug
 		 * @param {string} extraMsg
@@ -614,6 +634,7 @@ window.sdh.main = function () {
 
 		/**
 		 * Set the Wikidata description using the API.
+		 *
 		 * @param {string} newDescription
 		 * @return {Promise}
 		 */
@@ -633,6 +654,7 @@ window.sdh.main = function () {
 		 * This function edits Wikidata descriptions and is used on wikis that aren't enwiki.
 		 * Beyond what setWikidataDescription does, it reloads the page on success
 		 * and gives an informative error notification.
+		 *
 		 * @param {string} newDescription
 		 */
 		var editWikidataDescription = function ( newDescription ) {
@@ -655,22 +677,24 @@ window.sdh.main = function () {
 
 		/**
 		 * This function adds or replaces short descriptions.
+		 *
 		 * @param {string} newDescription
 		 */
 		var editDescription = function ( newDescription ) {
-			var replacement, prependText, appendText, text;
+			var replacement, prependText, appendText, text, prependDescription, summary;
 
 			/**
 			 * Helper function to add quotes around text,
 			 * used when generating the summary.
-			 * @param {string} text
+			 *
+			 * @param {string} textToQuote
 			 * @return {string}
 			 */
-			var quotify = function ( text ) {
-				if ( text === '' || text.toLowerCase() === 'none' ) {
+			var quotify = function ( textToQuote ) {
+				if ( textToQuote === '' || textToQuote.toLowerCase() === 'none' ) {
 					return 'none';
 				} else {
-					return '"' + text + '"';
+					return '"' + textToQuote + '"';
 				}
 			};
 
@@ -679,12 +703,6 @@ window.sdh.main = function () {
 			 * depending on which of text, prependText, and appendText exists.
 			 */
 			var makeEdit = function () {
-				var summary = mw.message(
-					summaryMsg,
-					quotify( pageDescription ),
-					quotify( newDescription )
-				).plain() +
-					mw.message( 'sdh-summary-append' ).plain();
 				API.postWithEditToken( {
 					action: 'edit',
 					section: section,
@@ -708,6 +726,7 @@ window.sdh.main = function () {
 			/**
 			 * Replaces the current local short description with the new one.
 			 * If the short description doesn't exist in the text, return false.
+			 *
 			 * @param {string} wikitextResult Result of getText()
 			 * @return {boolean} Whether there was a description in the wikitext
 			 * and so whether makeEdit could be called.
@@ -726,7 +745,7 @@ window.sdh.main = function () {
 			};
 
 			// Replace hyphens in dates with en dashes
-			newDescription = newDescription.replace(DATEPATTERN, DATEREPLACEMENT);
+			newDescription = newDescription.replace( DATEPATTERN, DATEREPLACEMENT );
 
 			// Make edits to Wikidata as appropiate
 			if (
@@ -749,7 +768,21 @@ window.sdh.main = function () {
 				newDescription = 'none';
 			}
 
-			replacement = '{{Short description|' + newDescription + '}}';
+			// Use 1= if the description has an '='
+			if ( newDescription.indexOf( '=' ) !== -1 ) {
+				prependDescription = '1=';
+			} else {
+				prependDescription = '';
+			}
+
+			replacement = '{{Short description|' + prependDescription + newDescription + '}}';
+
+			summary = mw.message(
+				summaryMsg,
+				quotify( pageDescription ),
+				quotify( newDescription )
+			).plain() +
+				mw.message( 'sdh-summary-append' ).plain();
 
 			/**
 			 * change = true means there was a previous short description in the wikitext
@@ -779,7 +812,7 @@ window.sdh.main = function () {
 		 * Creates input box with save and cancel buttons.
 		 * If input box was created before, show it again.
 		 * Otherwise, create the input box using OOui.
-		*/
+		 */
 		var textInput = function () {
 			if ( actionField ) {
 				$description.addClass( 'sdh-showdescrip-hidden' );
@@ -832,7 +865,7 @@ window.sdh.main = function () {
 						var description = descriptionInput.getValue().trim();
 						length = descriptionInput.getInputLength();
 						descriptionInput.setLabel( String( length ) );
-						if (isLocal && description === pageDescription) {
+						if ( isLocal && description === pageDescription ) {
 							saveButton.setDisabled( true );
 						} else {
 							saveButton.setDisabled( false );
@@ -853,7 +886,7 @@ window.sdh.main = function () {
 					 * This is bound to the save button.
 					 * Disables all the elements and calls the relevant function
 					 * responsible for saving the the entered short description.
-					*/
+					 */
 					saveInput = function () {
 						var description = descriptionInput.getValue().trim();
 						descriptionInput
@@ -893,6 +926,7 @@ window.sdh.main = function () {
 
 		/**
 		 * Create the html and append it to the DOM
+		 *
 		 * @param {Object} textElement
 		 * @param {Array<Clicky>} clickyElements
 		 * @param {InfoClickyPopup} popupElement
@@ -923,7 +957,7 @@ window.sdh.main = function () {
 		/**
 		 * Disable all buttons and create processing (...) animation
 		 * Used by export and import buttons.
-		*/
+		 */
 		var setProcessing = function () {
 			var x;
 			var $processing = $( '<div>' )
@@ -953,7 +987,7 @@ window.sdh.main = function () {
 		/**
 		 * Texts, clickies, and popups contain
 		 * elements that could make up the initial display.
-		*/
+		 */
 		var texts = {
 			noDescription: $( '<span>' )
 				.addClass( 'sdh-no-description' )
@@ -964,7 +998,7 @@ window.sdh.main = function () {
 			pageDescription: $( '<span>' )
 				.addClass( 'mw-page-description ' )
 				.text( pageDescription + ( appendWDDescription ?
-					(' (Wikidata: ' + wikidataDescription + ')' ) : '' ) )
+					( ' (Wikidata: ' + wikidataDescription + ')' ) : '' ) )
 		};
 
 		var clickies = {
@@ -1064,35 +1098,41 @@ window.sdh.main = function () {
 		 * this code determines what elements should make up the initial display.
 		 * updateSDH() is then called to generate the html
 		 * and add that to the DOM.
+		 *
 		 * @param {Object} wikitextResult
-		*/
+		 */
 		var determineElements = function ( wikitextResult ) {
 			/**
 			 * The description as determined from the wikitext.
+			 *
 			 * @type {string}
 			 */
 			var descriptionFromText;
 
 			/**
 			 * The short description or a message saying no description exists etc.
+			 *
 			 * @type {Object}
 			 */
 			var textElement;
 
 			/**
 			 * What the relevant buttons ("clickies") are.
+			 *
 			 * @type {Array<Clicky>}
 			 */
 			var clickyElements = [];
 
 			/**
 			 * What clickable popup explanation is there if any
+			 *
 			 * @type {InfoClickyPopup}
 			 */
 			var popupElement;
 
 			/**
 			 * Whether the description is none
+			 *
 			 * @type {boolean}
 			 */
 			var isNone;
@@ -1131,7 +1171,7 @@ window.sdh.main = function () {
 			if ( pageDescription && !isLocal ) {
 				clickyElements.push( clickies.wikidataLink );
 			}
-			
+
 			if ( isNone ) {
 				// Handle {{Short description|none}}
 				textElement = texts.noDescription;
@@ -1190,7 +1230,9 @@ window.sdh.main = function () {
 		} else {
 			determineElements();
 		}
-	} );
+	};
+
+	$.when( callPromiseDescription, callPromiseWDDescription ).then( onResponses );
 };
 
 /* Load if viewing a page normally (not in diff view) */
@@ -1211,19 +1253,19 @@ if (
 	 * but not after a dynamic VE reload.
 	 * FIXME: Post edit hook fires too early, meaning if an editor adds a short description using VE
 	 * it won't show the right description.
-
-	mw.hook( 'postEdit' ).add( function () {
-		if ( window.sdh.hasRun ) {
-			window.sdh.main();
-		}
-	} );
-
-	if ( !window.sdh.hasRun ) { // Don't run twice
-		window.sdh.hasRun = true;
-		window.sdh.initMessages();
-		window.sdh.main();
-	}
-	*/
+	 *
+	 * mw.hook( 'postEdit' ).add( function () {
+	 * if ( window.sdh.hasRun ) {
+	 * window.sdh.main();
+	 * }
+	 * } );
+	 *
+	 * if ( !window.sdh.hasRun ) { // Don't run twice
+	 * window.sdh.hasRun = true;
+	 * window.sdh.initMessages();
+	 * window.sdh.main();
+	 * }
+	 */
 	window.sdh.initMessages();
 	window.sdh.main();
 }

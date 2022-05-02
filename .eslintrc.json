@@ -1,11 +1,17 @@
 {
+	"env": {
+        "browser": true,
+        "es6": true
+    },
 	"extends": [
 		"wikimedia/client",
 		"wikimedia/jquery"
 	],
 	"globals": {
 		"mw": false,
-		"OO": false
+		"OO": false,
+		"Clicky": false,
+		"InfoClickyPopup": false
 	},
 	"rules": {
 		"one-var": "off"
