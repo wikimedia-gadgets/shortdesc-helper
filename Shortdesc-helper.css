@@ -84,3 +84,14 @@
 .sdh-processing-dot-3 {
 	animation-delay: 600ms;
 }
+
+/* Styling for character counter based on length */
+
+.sdh-too-long {
+	color: #e65722
+}
+
+.sdh-very-long {
+	color: #e00000;
+	font-weight: bold;
+}

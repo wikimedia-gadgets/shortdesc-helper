@@ -884,7 +884,18 @@ window.sdh.main = function () {
 					var updateOnChange = function () {
 						var description = descriptionInput.getValue().trim();
 						length = descriptionInput.getInputLength();
-						descriptionInput.setLabel( String( length ) );
+						var classes = [ '' ];
+						if ( length > 40 ) {
+							if ( length > 75 ) {
+								classes = [ 'sdh-very-long' ];
+							} else {
+								classes = [ 'sdh-too-long' ];
+							}
+						}
+						descriptionInput.setLabel( {
+							text: String( length ),
+							classes: classes
+						} );
 						if ( isLocal && description === pageDescription ) {
 							saveButton.setDisabled( true );
 						} else {
