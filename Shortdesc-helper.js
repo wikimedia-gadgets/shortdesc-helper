@@ -892,10 +892,11 @@ window.sdh.main = function () {
 								classes = [ 'sdh-too-long' ];
 							}
 						}
-						descriptionInput.setLabel( {
-							text: String( length ),
-							classes: classes
-						} );
+						descriptionInput.setLabel(
+							$( '<span>' )
+								.addClass( classes )
+								.text( String( length ) )
+						);
 						if ( isLocal && description === pageDescription ) {
 							saveButton.setDisabled( true );
 						} else {
