@@ -95,3 +95,8 @@
 	color: #e00000;
 	font-weight: bold;
 }
+
+#sdh {
+	display: flex;
+	flex-shrink: 1;
+}
