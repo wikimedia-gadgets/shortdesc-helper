@@ -434,6 +434,13 @@ window.sdh.main = function () {
 		var actionField;
 
 		/**
+		 * Used in textInput
+		 *
+		 * @type {OO.ui.TextInputWidget}
+		 */
+		var descriptionInput;
+
+		/**
 		 * These three variables are defined by the button being clicked
 		 */
 
@@ -837,11 +844,12 @@ window.sdh.main = function () {
 			if ( actionField ) {
 				$description.addClass( 'sdh-showdescrip-hidden' );
 				actionField.toggle();
+				descriptionInput.focus();
 			} else {
 				mw.loader.using( [ 'oojs-ui-core', 'oojs-ui-widgets', 'oojs-ui.styles.icons-interactions' ] ).then( function () {
 					var length, saveInput, buttons;
 					// Define the input box and buttons.
-					var descriptionInput = new OO.ui.TextInputWidget( {
+					descriptionInput = new OO.ui.TextInputWidget( {
 						autocomplete: false,
 						autofocus: true,
 						id: [ 'sdh-inputbox' ],
@@ -952,6 +960,7 @@ window.sdh.main = function () {
 					// Hide previous displayed clickies and add to DOM
 					$description.addClass( 'sdh-showdescrip-hidden' );
 					$sdh.append( actionField.$element );
+					descriptionInput.focus();
 				} );
 			}
 		};
