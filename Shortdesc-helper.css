@@ -55,7 +55,7 @@
 	flex-direction: column;
 }
 
-/* Make things flex. Allow description input box size to be set exactly, and everything else look good. */
+/* Make things flex to allow description input box size to be set exactly, and everything else to look good. */
 #sdh .oo-ui-fieldLayout-field {
 	display: flex;
 	align-items: center;
