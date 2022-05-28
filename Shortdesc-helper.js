@@ -906,7 +906,8 @@ window.sdh.main = function () {
 						length = descriptionInput.getInputLength();
 						var classes = [ '' ];
 						if ( length > 40 ) {
-							if ( length > 50 ) {
+							// Length matching Category:Articles with long short description
+							if ( length > 100 ) {
 								classes = [ 'sdh-very-long' ];
 							} else {
 								classes = [ 'sdh-too-long' ];
