@@ -6,7 +6,7 @@
  * |_____________________________________________________________________________|
  *
  */
-/* v3.4.5 */
+/* v3.5.0 */
 
 /* Stylings for missing description and links to wikidata */
 .sdh-missing-description {
@@ -51,8 +51,18 @@
 #sdh-editbox {
 	padding: 0;
 	margin: 0;
-	display: inline-block;
-	width: 100% /* Fix for Firefox so that element fills the max-width */
+	display: flex;
+	flex-direction: column;
+}
+
+/* Make things flex. Allow description input box size to be set exactly, and everything else look good. */
+#sdh .oo-ui-fieldLayout-field {
+	display: flex;
+	align-items: center;
+}
+
+#sdh-descriptionbox {
+	margin-right: 0;
 }
 
 /* Styling for processing animation */
@@ -86,7 +96,6 @@
 }
 
 /* Styling for character counter based on length */
-
 .sdh-too-long {
 	color: #d43900;
 }
@@ -94,9 +103,4 @@
 .sdh-very-long {
 	color: #e00000;
 	font-weight: bold;
-}
-
-#sdh {
-	display: flex;
-	flex-shrink: 1;
 }
