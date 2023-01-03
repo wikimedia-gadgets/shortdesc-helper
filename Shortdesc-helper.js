@@ -8,7 +8,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.5.0
+ * Shortdesc helper: v3.5.1
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -669,7 +669,7 @@ window.sdh.main = function () {
 					action: 'wbsetdescription',
 					id: wgQid,
 					language: language,
-					summary: summary + mw.message( 'sdh-wd-summary', language ).plain(),
+					summary: ( summary || '' ) + mw.message( 'sdh-wd-summary', language ).plain(),
 					value: newDescription
 				} );
 			} );
@@ -1015,6 +1015,7 @@ window.sdh.main = function () {
 			}
 
 			$sdh.append( $description );
+			$sdh.addClass( 'noprint' );
 
 			$.ready.then( function () {
 				// Undo padding used to fix content jump
