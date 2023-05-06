@@ -17,6 +17,10 @@
 	color: MediumVioletRed; /* Using MediumVioletRed rather than previous HotPink to meet WCAG AA */
 }
 
+.sdh-ve-hidden {
+	display: none;
+}
+
 /**
  * Interestingly, Vector's stylesheet makes <a> elements without href have a pointer automatically
  * This is for other skins.
