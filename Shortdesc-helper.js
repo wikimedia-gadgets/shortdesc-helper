@@ -1022,12 +1022,29 @@ window.sdh.main = function () {
 			$sdh.append( $description );
 			$sdh.addClass( 'noprint' );
 
+			var hideSDH = function () {
+				$sdh.addClass( 'sdh-ve-hidden' );
+			};
+
+			var showSDH = function () {
+				$sdh.removeClass( 'sdh-ve-hidden' );
+			};
+
 			$.ready.then( function () {
 				// Undo padding used to fix content jump
 				mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
 				// Create and attach the main div to #contentSub
 				// eslint-disable-next-line no-jquery/no-global-selector
 				$( '#contentSub' ).append( $sdh );
+
+				mw.hook( 've.activationComplete' ).add( function () {
+					hideSDH();
+				} );
+
+				mw.hook( 've.deactivationComplete' ).add( function () {
+					showSDH();
+				} );
+
 			} );
 		};
 
