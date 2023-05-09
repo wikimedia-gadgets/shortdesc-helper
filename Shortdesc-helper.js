@@ -8,7 +8,7 @@
  *
  */
 /**
- * Shortdesc helper: v3.5.1
+ * Shortdesc helper: v3.5.2
  * Documentation at en.wikipedia.org/wiki/Wikipedia:Shortdesc_helper
  * The documentation includes instructions for using this gadget on other wikis.
  * Shows short descriptions, and allows importing wikidata descriptions, adding descriptions,
@@ -767,6 +767,11 @@ window.sdh.main = function () {
 					return false;
 				}
 			};
+			
+			// Fix manual entry of "none"
+			if ( newDescription.toLowerCase() === 'none' ) {
+				newDescription = '';
+			}
 
 			// Replace hyphens in dates with en dashes
 			newDescription = newDescription.replace( DATEPATTERN, DATEREPLACEMENT );
