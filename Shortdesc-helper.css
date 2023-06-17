@@ -6,7 +6,7 @@
  * |_____________________________________________________________________________|
  *
  */
-/* v3.5.3 */
+/* v3.5.4 */
 
 /* Stylings for missing description and links to wikidata */
 .sdh-missing-description {
@@ -107,4 +107,15 @@
 .sdh-very-long {
 	color: #e00000;
 	font-weight: bold;
+}
+
+/* Copy pasted from #contentSub > #mw-content-subtitle */
+/* Needed for vector and monobook to look right. */
+.skin-vector-legacy #sdh,
+.skin-monobook #sdh {
+    font-size: 84%;
+    line-height: 1.2em;
+    margin: 0 0 1.4em 1em;
+    color: #54595d;
+    width: auto;
 }
