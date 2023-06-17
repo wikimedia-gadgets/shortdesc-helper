@@ -1,3 +1,5 @@
+/* This is its own file/gadget because a CSS-only gadget like this is page blocking, but CSS in a JavaScript gadget is loaded later. Doing it this way avoids a flash of unstyled content where the short description jumps around. */
+
 /* Fix content jump */
 .skin-vector.ns-0 #contentSub::after {
 	content: '\200B';
