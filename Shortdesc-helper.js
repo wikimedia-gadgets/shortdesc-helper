@@ -175,7 +175,7 @@ window.sdh.main = function () {
 	 *
 	 * @type {RegExp}
 	 */
-	var DATEPATTERN = /(\d+)-(\d+)/;
+	var DATEPATTERN = /(\d\d+)-(\d\d+)/;
 
 	/**
 	 * Replace for date spans.
