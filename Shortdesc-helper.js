@@ -45,6 +45,8 @@ window.sdh.initMessages = function () {
 		'sdh-FontSize-label': 'Font size, as a percentage (default 100%)',
 		/* Initial view messages */
 		'sdh-missing-description': 'Missing <a href="/wiki/Wikipedia:Short description">$1 description</a>',
+		'sdh-article-label': 'article',
+		'sdh-redirect-label': 'redirect',
 		/* Initial view buttons */
 		'sdh-add-label': 'Add',
 		'sdh-add-title': 'Add short description',
@@ -911,8 +913,7 @@ window.sdh.main = function () {
 						length = descriptionInput.getInputLength();
 						var classes = [ '' ];
 						if ( length > 40 ) {
-							// Length matching Category:Articles with long short description
-							if ( length > 100 ) {
+							if ( length > 60 ) {
 								classes = [ 'sdh-very-long' ];
 							} else {
 								classes = [ 'sdh-too-long' ];
@@ -1032,10 +1033,9 @@ window.sdh.main = function () {
 
 			$.ready.then( function () {
 				// Undo padding used to fix content jump
-				mw.util.addCSS( '.skin-vector.ns-0 #contentSub::after {content: none;}' );
-				// Create and attach the main div to #contentSub
-				// eslint-disable-next-line no-jquery/no-global-selector
-				$( '#contentSub' ).append( $sdh );
+				mw.util.addCSS( '.skin-vector.ns-0 #mw-content-subtitle::after {content: none;}' );
+				// Add the main div to the subtitle
+				mw.util.addSubtitle( $sdh[0] );
 
 				mw.hook( 've.activationComplete' ).add( function () {
 					hideSDH();
@@ -1088,7 +1088,7 @@ window.sdh.main = function () {
 				.text( mw.msg( 'sdh-no-description' ) ),
 			missingDescription: $( '<span>' )
 				.addClass( 'sdh-missing-description' )
-				.html( mw.msg( 'sdh-missing-description', ( isRedirect ? 'redirect' : 'article' ) ) ),
+				.html( mw.msg( 'sdh-missing-description', mw.msg( 'sdh-' + (isRedirect ? 'redirect' : 'article') + '-label' ) ) ),
 			pageDescription: $( '<span>' )
 				.addClass( 'mw-page-description ' )
 				.text( pageDescription + ( appendWDDescription ?
