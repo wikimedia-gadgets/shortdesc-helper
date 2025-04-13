@@ -778,6 +778,9 @@ window.sdh.main = function () {
 			// Replace hyphens in dates with en dashes
 			newDescription = newDescription.replace( DATEPATTERN, DATEREPLACEMENT );
 
+			// Replace non-breaking spaces with regular spaces
+			newDescription = newDescription.replace( /\u00A0/g, ' ' );
+
 			// Make edits to Wikidata as appropiate
 			if (
 				wgQid &&
